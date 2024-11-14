@@ -1,5 +1,6 @@
 package com.example.course_work.entity;
 
+import com.fasterxml.jackson.annotation.JsonFormat;
 import jakarta.persistence.*;
 import jdk.jfr.Timespan;
 import lombok.Getter;
@@ -25,5 +26,6 @@ public class Client extends BaseEntity {
     private String phone;
     @Temporal(TemporalType.DATE)
     @Column (name = "birth_date")
+
     private Date birthDate;
 }

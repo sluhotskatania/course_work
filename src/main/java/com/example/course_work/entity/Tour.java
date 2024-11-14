@@ -1,7 +1,7 @@
 package com.example.course_work.entity;
 
+import com.example.course_work.enums.TypeEnum;
 import jakarta.persistence.*;
-import jdk.jfr.Timespan;
 import lombok.Getter;
 import lombok.Setter;
 import lombok.ToString;
@@ -31,8 +31,10 @@ public class Tour extends BaseEntity {
     @Temporal(TemporalType.DATE)
     @Column(name = "return_date")
     private Date returnDate;
+
+    @Enumerated(EnumType.STRING)
     @Column(name = "type")
-    private String type;
+    private TypeEnum type;
     @Column(name = "max_participants")
     private Integer maxParticipants;
 }

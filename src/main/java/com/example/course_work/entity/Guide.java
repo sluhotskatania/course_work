@@ -22,6 +22,8 @@ public class Guide extends BaseEntity {
     private String email;
     @Column(name = "phone")
     private String phone;
+
+
     @Column(name = "languages")
     private String languages;
     @Column(name = "experience")
