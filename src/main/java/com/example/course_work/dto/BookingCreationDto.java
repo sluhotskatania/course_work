@@ -10,5 +10,7 @@ import java.util.Date;
 /**
  * DTO for {@link com.example.course_work.entity.Booking}
  */
-public record BookingDto(long id, Date created, long clientId, long tourId, CityEnum city, Date bookingDate, BookingStatusEnum status, PaymentStatusEnum paymentStatus, Double totalPrice, String notes) implements Serializable {
-  }
+public record BookingCreationDto(CityEnum city, Date bookingDate, BookingStatusEnum status,
+                                 PaymentStatusEnum paymentStatus, Double totalPrice,
+                                 String notes) implements Serializable {
+}

@@ -10,6 +10,8 @@ import lombok.AllArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.List;
+
 @Service
 @AllArgsConstructor
 @Transactional
@@ -24,5 +26,11 @@ public class ClientService {
     }
     public ClientDto createClient(ClientCreationDto client) {
         return clientMapper.toDto(clientRepository.save(clientMapper.toEntity(client)));
+    }
+    @Transactional(readOnly = true)
+    public List<ClientDto> getAllClients() {
+        return clientRepository.findAll().stream()
+                .map(clientMapper::toDto)
+                .toList();
     }
 }
