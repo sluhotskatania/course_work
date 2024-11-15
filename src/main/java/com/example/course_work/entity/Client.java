@@ -16,6 +16,7 @@ import java.util.Date;
 @ToString
 
 public class Client extends BaseEntity {
+
 @Column(name = "name")
     private String name;
     @Column(name = "surname")

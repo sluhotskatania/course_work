@@ -14,14 +14,6 @@ import java.util.Date;
 @Setter
 @ToString
 public class Accommodation extends BaseEntity {
-    @ManyToOne
-    @JoinColumn(name = "tour_id", nullable = false)
-    private Tour tour;
-
-    @ManyToOne
-    @JoinColumn(name = "booking_id", nullable = false)
-    private Booking booking;
-
     @Column(name = "name")
     private String name;
     @Column(name = "location")

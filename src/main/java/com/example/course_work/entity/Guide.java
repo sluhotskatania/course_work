@@ -14,6 +14,18 @@ import java.util.Date;
 @Setter
 @ToString
 public class Guide extends BaseEntity {
+    @ManyToOne
+    @JoinColumn(name = "tour_id", nullable = false)
+    private Tour tour;
+
+    public Tour getTour() {
+        return tour;
+    }
+
+    public void setTour(Tour tour) {
+        this.tour = tour;
+    }
+
     @Column(name = "name")
     private String name;
     @Column(name = "surname")

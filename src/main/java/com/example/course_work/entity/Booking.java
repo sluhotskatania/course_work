@@ -17,15 +17,19 @@ import java.util.Date;
 @Setter
 @ToString
 public class Booking extends BaseEntity {
-
     @ManyToOne
     @JoinColumn(name = "client_id", nullable = false)
     private Client client;
+    public Client getClient() {
+        return client;
+    }
 
+    public void setClient(Client client) {
+        this.client = client;
+    }
     @ManyToOne
-    @JoinColumn(name = "tour_id", nullable = false)
-    private Tour tour;
-
+    @JoinColumn(name = "accommodation_id", nullable = false)
+    private Accommodation accommodation;
     @Enumerated(EnumType.STRING)
     @Column(name = "city")
     private CityEnum city;

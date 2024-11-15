@@ -7,8 +7,6 @@ import org.mapstruct.*;
 
 @Mapper(unmappedTargetPolicy = ReportingPolicy.IGNORE, componentModel = MappingConstants.ComponentModel.SPRING)
 public interface AccommodationMapper {
-    @Mapping(source = "bookingId", target = "booking.id")
-    @Mapping(source = "tourId", target = "tour.id")
     Accommodation toEntity(AccommodationDto accommodationDto);
 
     @InheritInverseConfiguration(name = "toEntity")
@@ -19,9 +17,4 @@ public interface AccommodationMapper {
     Accommodation partialUpdate(AccommodationDto accommodationDto, @MappingTarget Accommodation accommodation);
 
     Accommodation toEntity(AccommodationCreationDto accommodationCreationDto);
-
-    AccommodationCreationDto toDto1(Accommodation accommodation);
-
-    @BeanMapping(nullValuePropertyMappingStrategy = NullValuePropertyMappingStrategy.IGNORE)
-    Accommodation partialUpdate(AccommodationCreationDto accommodationCreationDto, @MappingTarget Accommodation accommodation);
 }

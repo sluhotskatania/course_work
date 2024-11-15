@@ -10,5 +10,5 @@ import java.util.Date;
  */
 public record TourDto(long id, Date created, String name, String destination, Integer duration, Double price,
                       Date departureDate, Date returnDate, TypeEnum type,
-                      Integer maxParticipants) implements Serializable {
+                      Integer maxParticipants, long bookingId, long accommodationId) implements Serializable {
 }

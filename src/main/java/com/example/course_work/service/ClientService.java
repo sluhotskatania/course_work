@@ -2,8 +2,11 @@ package com.example.course_work.service;
 
 import com.example.course_work.dto.ClientCreationDto;
 import com.example.course_work.dto.ClientDto;
+import com.example.course_work.entity.Booking;
 import com.example.course_work.entity.Client;
+import com.example.course_work.entity.Tour;
 import com.example.course_work.mapper.ClientMapper;
+import com.example.course_work.repository.BookingRepository;
 import com.example.course_work.repository.ClientRepository;
 
 import lombok.AllArgsConstructor;
@@ -18,6 +21,7 @@ import java.util.List;
 public class ClientService {
     private final ClientRepository clientRepository;
     private final ClientMapper clientMapper;
+    private final BookingRepository bookingRepository;
 
     @Transactional(readOnly=true)
     public ClientDto getById(Long id){

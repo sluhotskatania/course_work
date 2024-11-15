@@ -12,5 +12,5 @@ import java.util.Date;
  */
 public record BookingCreationDto(CityEnum city, Date bookingDate, BookingStatusEnum status,
                                  PaymentStatusEnum paymentStatus, Double totalPrice,
-                                 String notes) implements Serializable {
+                                 String notes, long accommodationId, long clientId) implements Serializable {
 }
