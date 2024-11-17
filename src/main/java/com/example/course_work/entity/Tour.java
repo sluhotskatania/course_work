@@ -55,8 +55,8 @@ public class Tour extends BaseEntity {
     private Date returnDate;
 
     @Enumerated(EnumType.STRING)
-    @Column(name = "type")
     private TypeEnum type;
+
     @Column(name = "max_participants")
     private Integer maxParticipants;
 }

@@ -1,12 +1,7 @@
 package com.example.course_work.dto;
 
-import com.example.course_work.enums.BookingStatusEnum;
-import com.example.course_work.enums.CityEnum;
-import com.example.course_work.enums.PaymentStatusEnum;
-
 import java.io.Serializable;
 import java.util.Date;
-
 /**
  * DTO for {@link com.example.course_work.entity.Client}
  */

@@ -1,5 +1,6 @@
 package com.example.course_work.entity;
 
+import com.example.course_work.enums.LanguagesEnum;
 import jakarta.persistence.*;
 import jdk.jfr.Timespan;
 import lombok.Getter;
@@ -35,9 +36,8 @@ public class Guide extends BaseEntity {
     @Column(name = "phone")
     private String phone;
 
-
-    @Column(name = "languages")
-    private String languages;
+    @Enumerated(EnumType.STRING)
+    private LanguagesEnum languages;
     @Column(name = "experience")
     private Integer experience;
     @Column(name = "rating")

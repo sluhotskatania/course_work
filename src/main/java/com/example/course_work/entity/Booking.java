@@ -1,10 +1,8 @@
 package com.example.course_work.entity;
 
 import com.example.course_work.enums.BookingStatusEnum;
-import com.example.course_work.enums.CityEnum;
 import com.example.course_work.enums.PaymentStatusEnum;
 import jakarta.persistence.*;
-import jdk.jfr.Timespan;
 import lombok.Getter;
 import lombok.Setter;
 import lombok.ToString;
@@ -30,9 +28,6 @@ public class Booking extends BaseEntity {
     @ManyToOne
     @JoinColumn(name = "accommodation_id", nullable = false)
     private Accommodation accommodation;
-    @Enumerated(EnumType.STRING)
-    @Column(name = "city")
-    private CityEnum city;
 
     @Temporal(TemporalType.DATE)
     @Column(name = "booking_date")
@@ -49,4 +44,12 @@ public class Booking extends BaseEntity {
     private Double totalPrice;
     @Column(name = "notes")
     private String notes;
+    @Column(name = "nights", nullable = false)
+    private int nights;
+
+    public void calculateTotalPrice() {
+        if (accommodation != null) {
+            totalPrice = accommodation.getPricePerNight() * nights;
+        }
+    }
 }

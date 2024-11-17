@@ -2,6 +2,7 @@ package com.example.course_work.controller;
 
 import com.example.course_work.dto.AccommodationCreationDto;
 import com.example.course_work.dto.AccommodationDto;
+import com.example.course_work.enums.TypeAccommodationEnum;
 import com.example.course_work.service.AccommodationService;
 import jakarta.validation.Valid;
 import lombok.AllArgsConstructor;
@@ -28,5 +29,18 @@ public class AccommodationController {
     @GetMapping
     public ResponseEntity<List<AccommodationDto>> getAllAccommodations() {
         return ResponseEntity.ok(accommodationService.getAllAccommodations());
+    }
+    @GetMapping("/filter/type")
+    public ResponseEntity<List<AccommodationDto>> getTourAccommodationsByType(@RequestParam String type) {
+        try {
+            TypeAccommodationEnum typeAccommodationEnum = TypeAccommodationEnum.valueOf(type.toUpperCase());
+            return ResponseEntity.ok(accommodationService.getTourAccommodationsByType(typeAccommodationEnum));
+        } catch (IllegalArgumentException e) {
+            return ResponseEntity.badRequest().body(null);
+        }
+    }
+    @GetMapping("/filter/location")
+    public ResponseEntity<List<AccommodationDto>> getAccommodationsByLocation(@RequestParam String location) {
+        return ResponseEntity.ok(accommodationService.getAccommodationsByLocation(location));
     }
 }

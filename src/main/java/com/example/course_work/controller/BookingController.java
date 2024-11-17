@@ -29,4 +29,8 @@ public class BookingController {
     public ResponseEntity<List<BookingDto>> getAllBookings() {
         return ResponseEntity.ok(bookingServise.getAllBookings());
     }
+    @GetMapping("/client/{clientId}")
+    public List<BookingDto> getBookingsByClientId(@PathVariable Long clientId) {
+        return bookingServise.getBookingsByClientId(clientId); // Виправлено виклик сервісу
+    }
 }

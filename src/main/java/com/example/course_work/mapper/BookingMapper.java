@@ -7,15 +7,11 @@ import org.mapstruct.*;
 
 @Mapper(unmappedTargetPolicy = ReportingPolicy.IGNORE, componentModel = MappingConstants.ComponentModel.SPRING)
 public interface BookingMapper {
-    @Mapping(source = "clientBirthDate", target = "client.birthDate")
     @Mapping(source = "clientPhone", target = "client.phone")
     @Mapping(source = "clientEmail", target = "client.email")
     @Mapping(source = "clientSurname", target = "client.surname")
     @Mapping(source = "clientName", target = "client.name")
     @Mapping(source = "clientId", target = "client.id")
-    @Mapping(source = "accommodationAvailability", target = "accommodation.availability")
-    @Mapping(source = "accommodationPricePerNight", target = "accommodation.pricePerNight")
-    @Mapping(source = "accommodationType", target = "accommodation.type")
     @Mapping(source = "accommodationLocation", target = "accommodation.location")
     @Mapping(source = "accommodationName", target = "accommodation.name")
     @Mapping(source = "accommodationId", target = "accommodation.id")
@@ -27,6 +23,6 @@ public interface BookingMapper {
     @InheritConfiguration(name = "toEntity")
     @BeanMapping(nullValuePropertyMappingStrategy = NullValuePropertyMappingStrategy.IGNORE)
     Booking partialUpdate(BookingDto bookingDto, @MappingTarget Booking booking);
-
+    @Mapping(source = "nights", target = "nights")
     Booking toEntity(BookingCreationDto bookingCreationDto);
 }
