@@ -2,13 +2,12 @@ package com.example.course_work.service;
 
 import com.example.course_work.dto.ClientCreationDto;
 import com.example.course_work.dto.ClientDto;
-import com.example.course_work.dto.TourDto;
 import com.example.course_work.entity.Client;
+import com.example.course_work.exception.ClientNotFound;
 import com.example.course_work.mapper.BookingMapper;
 import com.example.course_work.mapper.ClientMapper;
 import com.example.course_work.repository.BookingRepository;
 import com.example.course_work.repository.ClientRepository;
-
 import lombok.AllArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
@@ -20,7 +19,6 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.util.Date;
 import java.util.List;
-import java.util.stream.Collectors;
 
 @Service
 @AllArgsConstructor
@@ -88,6 +86,12 @@ public class ClientService {
         Page<Client> clients = clientRepository.findAll(specification, pageable);
         return clients.map(client -> new ClientDto(client.getId(), client.getCreated(), client.getName(),
                 client.getSurname(), client.getEmail(), client.getPhone(), client.getBirthDate()));
+    }
+    public ClientDto updateClient(Long id, ClientDto clientDto) {
+        Client client = clientRepository.findById(id)
+                .orElseThrow(() -> new ClientNotFound("Client not found"));
+        clientMapper.partialUpdate(clientDto, client);
+        return clientMapper.toDto(clientRepository.save(client));
     }
 
 

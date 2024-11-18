@@ -1,5 +1,6 @@
 package com.example.course_work.controller;
 
+import com.example.course_work.dto.AccommodationDto;
 import com.example.course_work.dto.BookingCreationDto;
 import com.example.course_work.dto.BookingDto;
 import com.example.course_work.dto.ClientDto;
@@ -56,5 +57,10 @@ public class BookingController {
             @RequestParam(required = false) Double maxPrice,
             Pageable pageable) {
         return bookingServise.getFilteredBookings(client, startDate, endDate, status, paymentStatus, minPrice, maxPrice, pageable);
+    }
+    @PutMapping("/{id}")
+    public ResponseEntity<BookingDto> updateBooking(@PathVariable Long id, @RequestBody @Valid BookingDto bookingDto) {
+        BookingDto updateBooking = bookingServise.updateBooking(id, bookingDto);
+        return ResponseEntity.ok(updateBooking);
     }
 }

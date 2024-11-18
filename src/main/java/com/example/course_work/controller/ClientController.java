@@ -1,9 +1,6 @@
 package com.example.course_work.controller;
 
-import com.example.course_work.dto.ClientCreationDto;
-import com.example.course_work.dto.ClientDto;
-import com.example.course_work.dto.GuideSortDto;
-import com.example.course_work.dto.TourDto;
+import com.example.course_work.dto.*;
 import com.example.course_work.service.ClientService;
 import com.example.course_work.service.TourService;
 import jakarta.validation.Valid;
@@ -57,10 +54,13 @@ public class ClientController {
             @RequestParam(required = false) @DateTimeFormat(pattern = "yyyy-MM-dd") Date maxBirthDate,
             Pageable pageable) {
 
-        // Перевірка та обробка параметрів дат для передачі у сервіс
         Page<ClientDto> filteredClients = clientService.getFilteredClients(name, surname, email, phone, minBirthDate, maxBirthDate, pageable);
         return ResponseEntity.ok(filteredClients);
     }
-
+    @PutMapping("/{id}")
+    public ResponseEntity<ClientDto> updateClient(@PathVariable Long id, @RequestBody @Valid ClientDto clientDto) {
+        ClientDto updateClient = clientService.updateClient(id, clientDto);
+        return ResponseEntity.ok(updateClient);
+    }
 
 }

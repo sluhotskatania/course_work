@@ -2,11 +2,9 @@ package com.example.course_work.service;
 
 import com.example.course_work.dto.AccommodationCreationDto;
 import com.example.course_work.dto.AccommodationDto;
-import com.example.course_work.dto.BookingDto;
-import com.example.course_work.dto.TourDto;
 import com.example.course_work.entity.Accommodation;
 import com.example.course_work.enums.TypeAccommodationEnum;
-import com.example.course_work.enums.TypeEnum;
+import com.example.course_work.exception.AccommodationNotFound;
 import com.example.course_work.mapper.AccommodationMapper;
 import com.example.course_work.repository.AccommodationRepository;
 import lombok.AllArgsConstructor;
@@ -19,7 +17,6 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
-import java.util.stream.Collectors;
 
 @Service
 @AllArgsConstructor
@@ -47,14 +44,8 @@ public class AccommodationService {
         Sort.Direction direction = "asc".equalsIgnoreCase(order) ? Sort.Direction.ASC : Sort.Direction.DESC;
         Pageable sortedPageable = PageRequest.of(pageable.getPageNumber(), pageable.getPageSize(), Sort.by(direction, sortBy));
         Page<Accommodation> accommodations = accommodationRepository.findAll(sortedPageable);
-        return accommodations.map(accommodation -> new AccommodationDto(
-                accommodation.getId(),
-                accommodation.getCreated(),
-                accommodation.getName(),
-                accommodation.getLocation(),
-                accommodation.getType(),
-                accommodation.getPricePerNight(),
-                accommodation.getAvailability()
+        return accommodations.map(accommodation -> new AccommodationDto(accommodation.getId(), accommodation.getCreated(), accommodation.getName(),
+                accommodation.getLocation(), accommodation.getType(), accommodation.getPricePerNight(), accommodation.getAvailability()
         ));
     }
     @Transactional(readOnly = true)
@@ -91,18 +82,17 @@ public class AccommodationService {
                     criteriaBuilder.lessThanOrEqualTo(root.get("availability"), maxAvailability));
         }
         Page<Accommodation> accommodations = accommodationRepository.findAll(specification, pageable);
-        return accommodations.map(accommodation -> new AccommodationDto(
-                accommodation.getId(),
-                accommodation.getCreated(),
-                accommodation.getName(),
-                accommodation.getLocation(),
-                accommodation.getType(),
-                accommodation.getPricePerNight(),
-                accommodation.getAvailability()
+        return accommodations.map(accommodation -> new AccommodationDto(accommodation.getId(), accommodation.getCreated(), accommodation.getName(),
+                accommodation.getLocation(), accommodation.getType(), accommodation.getPricePerNight(), accommodation.getAvailability()
         ));
     }
 
 
-
+    public AccommodationDto updateAccommodation(Long id, AccommodationDto accommodationDto) {
+        Accommodation accommodation = accommodationRepository.findById(id)
+                .orElseThrow(() -> new AccommodationNotFound("Accommodation not found"));
+        accommodationMapper.partialUpdate(accommodationDto, accommodation);
+        return accommodationMapper.toDto(accommodationRepository.save(accommodation));
+    }
 
 }

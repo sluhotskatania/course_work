@@ -1,9 +1,6 @@
 package com.example.course_work.controller;
 
-import com.example.course_work.dto.GuideCreationDto;
-import com.example.course_work.dto.GuideDto;
-import com.example.course_work.dto.GuideSortDto;
-import com.example.course_work.dto.TourDto;
+import com.example.course_work.dto.*;
 import com.example.course_work.enums.LanguagesEnum;
 import com.example.course_work.service.GuideService;
 import jakarta.validation.Valid;
@@ -58,6 +55,11 @@ public class GuideController {
             Page<GuideDto> filteredGuides = guideService.getFilteredGuides(
                     name, surname, email, phone, language, minExperience, maxExperience, minRating, maxRating, pageable);
             return ResponseEntity.ok(filteredGuides);
+    }
+    @PutMapping("/{id}")
+    public ResponseEntity<GuideDto> updateGuide(@PathVariable Long id, @RequestBody @Valid GuideDto guideDto) {
+        GuideDto updateGuide = guideService.updateGuide(id, guideDto);
+        return ResponseEntity.ok(updateGuide);
     }
 }
 

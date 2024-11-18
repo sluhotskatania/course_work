@@ -1,5 +1,6 @@
 package com.example.course_work.controller;
 
+import com.example.course_work.dto.GuideDto;
 import com.example.course_work.dto.TourCreationDto;
 import com.example.course_work.dto.TourDto;
 import com.example.course_work.dto.TourSortDto;
@@ -59,5 +60,10 @@ public class TourController {
                 name, destination, duration, minPrice, maxPrice, departureDate, returnDate, type, maxParticipants, pageable
         );
         return ResponseEntity.ok(filteredTours);
+    }
+    @PutMapping("/{id}")
+    public ResponseEntity<TourDto> updateTour(@PathVariable Long id, @RequestBody @Valid TourDto tourDto) {
+        TourDto updateTour = tourService.updateTour(id, tourDto);
+        return ResponseEntity.ok(updateTour);
     }
 }

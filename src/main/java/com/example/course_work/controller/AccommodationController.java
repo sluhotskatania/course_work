@@ -60,5 +60,9 @@ public class AccommodationController {
 
         return ResponseEntity.ok(accommodations);
     }
-
+    @PutMapping("/{id}")
+    public ResponseEntity<AccommodationDto> updateAccommodation(@PathVariable Long id, @RequestBody @Valid AccommodationDto accommodationDto) {
+        AccommodationDto updateAccommodation = accommodationService.updateAccommodation(id, accommodationDto);
+        return ResponseEntity.ok(updateAccommodation);
+    }
 }

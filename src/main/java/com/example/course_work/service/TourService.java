@@ -2,11 +2,11 @@ package com.example.course_work.service;
 
 import com.example.course_work.dto.TourCreationDto;
 import com.example.course_work.dto.TourDto;
-import com.example.course_work.dto.TourSortDto;
 import com.example.course_work.entity.Accommodation;
 import com.example.course_work.entity.Booking;
 import com.example.course_work.entity.Tour;
 import com.example.course_work.enums.TypeEnum;
+import com.example.course_work.exception.TourNotFound;
 import com.example.course_work.mapper.TourMapper;
 import com.example.course_work.repository.AccommodationRepository;
 import com.example.course_work.repository.BookingRepository;
@@ -121,6 +121,12 @@ public class TourService {
                 tour.getAccommodation().getName(), tour.getAccommodation().getLocation(), tour.getAccommodation().getType(), tour.getAccommodation().getPricePerNight(),
                 tour.getBooking().getId(), tour.getBooking().getTotalPrice(), tour.getBooking().getNotes()
         ));
+    }
+    public TourDto updateTour(Long id, TourDto tourDto) {
+        Tour tour = tourRepository.findById(id)
+                .orElseThrow(() -> new TourNotFound("Tour not found"));
+        tourMapper.partialUpdate(tourDto, tour);
+        return tourMapper.toDto(tourRepository.save(tour));
     }
 
 

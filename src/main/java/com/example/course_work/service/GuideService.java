@@ -1,14 +1,10 @@
 package com.example.course_work.service;
 
-import com.example.course_work.dto.GuideCreationDto;
-import com.example.course_work.dto.GuideDto;
-import com.example.course_work.dto.GuideSortDto;
-import com.example.course_work.dto.TourDto;
-import com.example.course_work.entity.Accommodation;
-import com.example.course_work.entity.Booking;
+import com.example.course_work.dto.*;
 import com.example.course_work.entity.Guide;
 import com.example.course_work.entity.Tour;
 import com.example.course_work.enums.LanguagesEnum;
+import com.example.course_work.exception.GuideNotFound;
 import com.example.course_work.mapper.GuideMapper;
 import com.example.course_work.repository.GuideRepository;
 import com.example.course_work.repository.TourRepository;
@@ -22,7 +18,6 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
-import java.util.stream.Collectors;
 
 @Service
 @AllArgsConstructor
@@ -56,22 +51,9 @@ public class GuideService {
         Sort.Direction direction = "asc".equalsIgnoreCase(order) ? Sort.Direction.ASC : Sort.Direction.DESC;
         Pageable sortedPageable = PageRequest.of(pageable.getPageNumber(), pageable.getPageSize(), Sort.by(direction, sortBy));
         Page<Guide> guides = guideRepository.findAll(sortedPageable);
-        return guides.map(guide -> new GuideDto(
-                guide.getId(),
-                guide.getCreated(),
-                guide.getName(),
-                guide.getSurname(),
-                guide.getEmail(),
-                guide.getPhone(),
-                guide.getLanguages(),
-                guide.getExperience(),
-                guide.getRating(),
-                guide.getTour().getId(),
-                guide.getTour().getName(),
-                guide.getTour().getDestination(),
-                guide.getTour().getDuration(),
-                guide.getTour().getDepartureDate(),
-                guide.getTour().getReturnDate(),
+        return guides.map(guide -> new GuideDto(guide.getId(), guide.getCreated(), guide.getName(), guide.getSurname(), guide.getEmail(),
+                guide.getPhone(), guide.getLanguages(), guide.getExperience(), guide.getRating(), guide.getTour().getId(), guide.getTour().getName(),
+                guide.getTour().getDestination(), guide.getTour().getDuration(), guide.getTour().getDepartureDate(), guide.getTour().getReturnDate(),
                 guide.getTour().getType()
         ));
     }
@@ -119,24 +101,17 @@ public class GuideService {
         }
 
         Page<Guide> guides = guideRepository.findAll(specification, pageable);
-        return guides.map(guide -> new GuideDto(
-                guide.getId(),
-                guide.getCreated(),
-                guide.getName(),
-                guide.getSurname(),
-                guide.getEmail(),
-                guide.getPhone(),
-                guide.getLanguages(),
-                guide.getExperience(),
-                guide.getRating(),
-                guide.getTour().getId(),
-                guide.getTour().getName(),
-                guide.getTour().getDestination(),
-                guide.getTour().getDuration(),
-                guide.getTour().getDepartureDate(),
-                guide.getTour().getReturnDate(),
+        return guides.map(guide -> new GuideDto(guide.getId(), guide.getCreated(), guide.getName(), guide.getSurname(), guide.getEmail(),
+                guide.getPhone(), guide.getLanguages(), guide.getExperience(), guide.getRating(), guide.getTour().getId(), guide.getTour().getName(),
+                guide.getTour().getDestination(), guide.getTour().getDuration(), guide.getTour().getDepartureDate(), guide.getTour().getReturnDate(),
                 guide.getTour().getType()
         ));
+    }
+    public GuideDto updateGuide(Long id, GuideDto guideDto) {
+        Guide guide = guideRepository.findById(id)
+                .orElseThrow(() -> new GuideNotFound("Guide not found"));
+        guideMapper.partialUpdate(guideDto, guide);
+        return guideMapper.toDto(guideRepository.save(guide));
     }
 
 }

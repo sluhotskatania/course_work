@@ -2,12 +2,12 @@ package com.example.course_work.service;
 
 import com.example.course_work.dto.BookingCreationDto;
 import com.example.course_work.dto.BookingDto;
-import com.example.course_work.dto.ClientDto;
 import com.example.course_work.entity.Accommodation;
 import com.example.course_work.entity.Booking;
 import com.example.course_work.entity.Client;
 import com.example.course_work.enums.BookingStatusEnum;
 import com.example.course_work.enums.PaymentStatusEnum;
+import com.example.course_work.exception.BookingNotFound;
 import com.example.course_work.mapper.BookingMapper;
 import com.example.course_work.repository.AccommodationRepository;
 import com.example.course_work.repository.BookingRepository;
@@ -119,6 +119,11 @@ public class BookingServise {
                 booking.getClient().getPhone(), booking.getNights()
         ));
     }
-
+    public BookingDto updateBooking(Long id, BookingDto bookingDto) {
+        Booking booking = bookingRepository.findById(id)
+                .orElseThrow(() -> new BookingNotFound("Booking not found"));
+        bookingMapper.partialUpdate(bookingDto, booking);
+        return bookingMapper.toDto(bookingRepository.save(booking));
+    }
 
 }
