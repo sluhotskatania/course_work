@@ -12,10 +12,15 @@ import com.example.course_work.repository.AccommodationRepository;
 import com.example.course_work.repository.BookingRepository;
 import com.example.course_work.repository.TourRepository;
 import lombok.AllArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
+import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.Date;
 import java.util.List;
 
 @Service
@@ -52,80 +57,71 @@ public class TourService {
                 .toList();
     }
 
-    @Transactional(readOnly = true)
-    public List<TourDto> getToursByDestination(String destination) {
-        return tourRepository.findByDestinationContainingIgnoreCase(destination)
-                .stream()
-                .map(tourMapper::toDto)
-                .toList();
-    }
-    @Transactional(readOnly = true)
-    public List<TourDto> getToursByType(TypeEnum type) {
-        return tourRepository.findByType(type)  // Використовуємо тип enum у репозиторії
-                .stream()
-                .map(tourMapper::toDto)
-                .toList();
-    }
-
 
     @Transactional(readOnly = true)
-    public List<TourSortDto> getAllToursSortedByDateAsc() {
-        return tourRepository.findAllByOrderByDepartureDateAsc()
-                .stream()
-                .map(tourMapper::toSortDto)
-                .toList();
+    public Page<TourDto> getSortedTours(String sortBy, String order, Pageable pageable) {
+        Sort.Direction direction = "asc".equalsIgnoreCase(order) ? Sort.Direction.ASC : Sort.Direction.DESC;
+        Pageable sortedPageable = PageRequest.of(pageable.getPageNumber(), pageable.getPageSize(), Sort.by(direction, sortBy));
+        Page<Tour> tours = tourRepository.findAll(sortedPageable);
+
+        return tours.map(tour -> new TourDto(tour.getId(), tour.getCreated(),tour.getName(), tour.getDestination(), tour.getDuration(),
+                tour.getPrice(), tour.getDepartureDate(), tour.getReturnDate(), tour.getType(), tour.getMaxParticipants(), tour.getAccommodation().getId(),
+                tour.getAccommodation().getName(), tour.getAccommodation().getLocation(), tour.getAccommodation().getType(), tour.getAccommodation().getPricePerNight(),
+                tour.getBooking().getId(), tour.getBooking().getTotalPrice(), tour.getBooking().getNotes()
+        ));
     }
 
     @Transactional(readOnly = true)
-    public List<TourSortDto> getAllToursSortedByDateDesc() {
-        return tourRepository.findAllByOrderByDepartureDateDesc()
-                .stream()
-                .map(tourMapper::toSortDto)
-                .toList();
+    public Page<TourDto> getFilteredTours(String name, String destination, Integer duration, Double minPrice, Double maxPrice,
+                                          Date departureDate, Date returnDate, TypeEnum type, Integer maxParticipants,
+                                          Pageable pageable) {
+        Specification<Tour> specification = Specification.where(null);
+
+        if (name != null && !name.isEmpty()) {
+            specification = specification.and((root, query, criteriaBuilder) ->
+                    criteriaBuilder.like(criteriaBuilder.lower(root.get("name")), "%" + name.toLowerCase() + "%"));
+        }
+        if (destination != null && !destination.isEmpty()) {
+            specification = specification.and((root, query, criteriaBuilder) ->
+                    criteriaBuilder.like(criteriaBuilder.lower(root.get("destination")), "%" + destination.toLowerCase() + "%"));
+        }
+        if (duration != null) {
+            specification = specification.and((root, query, criteriaBuilder) ->
+                    criteriaBuilder.equal(root.get("duration"), duration));
+        }
+        if (minPrice != null) {
+            specification = specification.and((root, query, criteriaBuilder) ->
+                    criteriaBuilder.greaterThanOrEqualTo(root.get("price"), minPrice));
+        }
+        if (maxPrice != null) {
+            specification = specification.and((root, query, criteriaBuilder) ->
+                    criteriaBuilder.lessThanOrEqualTo(root.get("price"), maxPrice));
+        }
+        if (departureDate != null) {
+            specification = specification.and((root, query, criteriaBuilder) ->
+                    criteriaBuilder.greaterThanOrEqualTo(root.get("departureDate"), departureDate));
+        }
+        if (returnDate != null) {
+            specification = specification.and((root, query, criteriaBuilder) ->
+                    criteriaBuilder.lessThanOrEqualTo(root.get("returnDate"), returnDate));
+        }
+        if (type != null) {
+            specification = specification.and((root, query, criteriaBuilder) ->
+                    criteriaBuilder.equal(root.get("type"), type));
+        }
+        if (maxParticipants != null) {
+            specification = specification.and((root, query, criteriaBuilder) ->
+                    criteriaBuilder.equal(root.get("maxParticipants"), maxParticipants));
+        }
+
+        Page<Tour> tours = tourRepository.findAll(specification, pageable);
+
+        return tours.map(tour -> new TourDto(tour.getId(), tour.getCreated(), tour.getName(), tour.getDestination(), tour.getDuration(), tour.getPrice(),
+                tour.getDepartureDate(), tour.getReturnDate(), tour.getType(), tour.getMaxParticipants(), tour.getAccommodation().getId(),
+                tour.getAccommodation().getName(), tour.getAccommodation().getLocation(), tour.getAccommodation().getType(), tour.getAccommodation().getPricePerNight(),
+                tour.getBooking().getId(), tour.getBooking().getTotalPrice(), tour.getBooking().getNotes()
+        ));
     }
 
-    @Transactional(readOnly = true)
-    public List<TourSortDto> getAllToursSortedByPriceAsc() {
-        return tourRepository.findAll(Sort.by(Sort.Order.asc("price")))
-                .stream()
-                .map(tourMapper::toSortDto)
-                .toList();
-    }
-
-    @Transactional(readOnly = true)
-    public List<TourSortDto> getAllToursSortedByPriceDesc() {
-        return tourRepository.findAll(Sort.by(Sort.Order.desc("price")))
-                .stream()
-                .map(tourMapper::toSortDto)
-                .toList();
-    }
-
-    @Transactional(readOnly = true)
-    public List<TourSortDto> getAllToursSortedByDurationAsc() {
-        return tourRepository.findAll(Sort.by(Sort.Order.asc("duration")))
-                .stream()
-                .map(tourMapper::toSortDto)
-                .toList();
-    }
-
-    @Transactional(readOnly = true)
-    public List<TourSortDto> getAllToursSortedByDurationDesc() {
-        return tourRepository.findAll(Sort.by(Sort.Order.desc("duration")))
-                .stream()
-                .map(tourMapper::toSortDto)
-                .toList();
-    }
-
-    @Transactional(readOnly = true)
-    public List<TourSortDto> getAllToursSorted(String sortBy, String order) {
-        Sort sort = order.equalsIgnoreCase("asc")
-                ? Sort.by(Sort.Order.asc(sortBy))
-                : Sort.by(Sort.Order.desc(sortBy));
-
-        return tourRepository.findAll(sort)
-                .stream()
-                .map(tourMapper::toSortDto)
-                .toList();
-    }
 
 }

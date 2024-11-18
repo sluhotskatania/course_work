@@ -13,7 +13,11 @@ import com.example.course_work.mapper.GuideMapper;
 import com.example.course_work.repository.GuideRepository;
 import com.example.course_work.repository.TourRepository;
 import lombok.AllArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
+import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -48,28 +52,91 @@ public class GuideService {
                 .toList();
     }
     @Transactional(readOnly = true)
-    public List<GuideSortDto> getAllGuidesSortedByRatingAsc() {
-        return guideRepository.findAll(Sort.by(Sort.Order.asc("rating")))
-                .stream()
-                .map(guideMapper::toGdSortDto)
-                .toList();
+    public Page<GuideDto> getSortedGuides(String sortBy, String order, Pageable pageable) {
+        Sort.Direction direction = "asc".equalsIgnoreCase(order) ? Sort.Direction.ASC : Sort.Direction.DESC;
+        Pageable sortedPageable = PageRequest.of(pageable.getPageNumber(), pageable.getPageSize(), Sort.by(direction, sortBy));
+        Page<Guide> guides = guideRepository.findAll(sortedPageable);
+        return guides.map(guide -> new GuideDto(
+                guide.getId(),
+                guide.getCreated(),
+                guide.getName(),
+                guide.getSurname(),
+                guide.getEmail(),
+                guide.getPhone(),
+                guide.getLanguages(),
+                guide.getExperience(),
+                guide.getRating(),
+                guide.getTour().getId(),
+                guide.getTour().getName(),
+                guide.getTour().getDestination(),
+                guide.getTour().getDuration(),
+                guide.getTour().getDepartureDate(),
+                guide.getTour().getReturnDate(),
+                guide.getTour().getType()
+        ));
     }
 
     @Transactional(readOnly = true)
-    public List<GuideSortDto> getAllGuidesSortedByRatingDesc() {
-        return guideRepository.findAll(Sort.by(Sort.Order.desc("rating")))
-                .stream()
-                .map(guideMapper::toGdSortDto)
-                .toList();
-    }
+    public Page<GuideDto> getFilteredGuides(String name, String surname, String email, String phone, LanguagesEnum language,
+                                            Integer minExperience, Integer maxExperience, Double minRating, Double maxRating, Pageable pageable) {
+        Specification<Guide> specification = Specification.where(null);
 
-    @Transactional(readOnly = true)
-    public List<GuideSortDto> getGuidesByLanguages(LanguagesEnum languages) {
-        List<Guide> guides = guideRepository.findByLanguages(languages);
-        return guides.stream()
-                .map(guideMapper::toGdSortDto)
-                .collect(Collectors.toList());
-    }
+        if (name != null && !name.isEmpty()) {
+            specification = specification.and((root, query, criteriaBuilder) ->
+                    criteriaBuilder.like(criteriaBuilder.lower(root.get("name")), "%" + name.toLowerCase() + "%"));
+        }
+        if (surname != null && !surname.isEmpty()) {
+            specification = specification.and((root, query, criteriaBuilder) ->
+                    criteriaBuilder.like(criteriaBuilder.lower(root.get("surname")), "%" + surname.toLowerCase() + "%"));
+        }
+        if (email != null && !email.isEmpty()) {
+            specification = specification.and((root, query, criteriaBuilder) ->
+                    criteriaBuilder.like(criteriaBuilder.lower(root.get("email")), "%" + email.toLowerCase() + "%"));
+        }
+        if (phone != null && !phone.isEmpty()) {
+            specification = specification.and((root, query, criteriaBuilder) ->
+                    criteriaBuilder.like(root.get("phone"), "%" + phone + "%"));
+        }
+        if (language != null) {
+            specification = specification.and((root, query, criteriaBuilder) ->
+                    criteriaBuilder.equal(root.get("languages"), language));
+        }
+        if (minExperience != null) {
+            specification = specification.and((root, query, criteriaBuilder) ->
+                    criteriaBuilder.greaterThanOrEqualTo(root.get("experience"), minExperience));
+        }
+        if (maxExperience != null) {
+            specification = specification.and((root, query, criteriaBuilder) ->
+                    criteriaBuilder.lessThanOrEqualTo(root.get("experience"), maxExperience));
+        }
+        if (minRating != null) {
+            specification = specification.and((root, query, criteriaBuilder) ->
+                    criteriaBuilder.greaterThanOrEqualTo(root.get("rating"), minRating));
+        }
+        if (maxRating != null) {
+            specification = specification.and((root, query, criteriaBuilder) ->
+                    criteriaBuilder.lessThanOrEqualTo(root.get("rating"), maxRating));
+        }
 
+        Page<Guide> guides = guideRepository.findAll(specification, pageable);
+        return guides.map(guide -> new GuideDto(
+                guide.getId(),
+                guide.getCreated(),
+                guide.getName(),
+                guide.getSurname(),
+                guide.getEmail(),
+                guide.getPhone(),
+                guide.getLanguages(),
+                guide.getExperience(),
+                guide.getRating(),
+                guide.getTour().getId(),
+                guide.getTour().getName(),
+                guide.getTour().getDestination(),
+                guide.getTour().getDuration(),
+                guide.getTour().getDepartureDate(),
+                guide.getTour().getReturnDate(),
+                guide.getTour().getType()
+        ));
+    }
 
 }

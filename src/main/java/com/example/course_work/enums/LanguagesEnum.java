@@ -1,5 +1,10 @@
 package com.example.course_work.enums;
 
 public enum LanguagesEnum {
-    SPANISH
+    SPANISH,
+    ENGLISH,
+    GERMAN,
+    CHINA,
+    FRENCH,
+    POLISH
 }

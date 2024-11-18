@@ -7,10 +7,14 @@ import com.example.course_work.enums.TypeEnum;
 import com.example.course_work.service.TourService;
 import jakarta.validation.Valid;
 import lombok.AllArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.Date;
 import java.util.List;
 
 @RestController
@@ -31,59 +35,29 @@ public class TourController {
     public ResponseEntity<List<TourDto>> getAllTours() {
         return ResponseEntity.ok(tourService.getAllTours());
     }
-    @GetMapping("/filter/destination")
-    public ResponseEntity<List<TourDto>> getToursByDestination(@RequestParam String destination) {
-        return ResponseEntity.ok(tourService.getToursByDestination(destination));
-    }
-    @GetMapping("/filter/type")
-    public ResponseEntity<List<TourDto>> getToursByType(@RequestParam String type) {
-        try {
-            TypeEnum typeEnum = TypeEnum.valueOf(type.toUpperCase());
-            return ResponseEntity.ok(tourService.getToursByType(typeEnum));
-        } catch (IllegalArgumentException e) {
-            return ResponseEntity.badRequest().body(null);
-        }
-    }
-
-
-    @GetMapping("/sorted/asc")
-    public ResponseEntity<List<TourSortDto>> getToursSortedByDateAsc() {
-        return ResponseEntity.ok(tourService.getAllToursSortedByDateAsc());
-    }
-
-    @GetMapping("/sorted/desc")
-    public ResponseEntity<List<TourSortDto>> getToursSortedByDateDesc() {
-        return ResponseEntity.ok(tourService.getAllToursSortedByDateDesc());
-    }
-    @GetMapping("/sorted/priceAsc")
-    public ResponseEntity<List<TourSortDto>> getToursSortedByPriceAsc() {
-        return ResponseEntity.ok(tourService.getAllToursSortedByPriceAsc());
-    }
-
-    // Сортування за ціною (спаданням)
-    @GetMapping("/sorted/priceDesc")
-    public ResponseEntity<List<TourSortDto>> getToursSortedByPriceDesc() {
-        return ResponseEntity.ok(tourService.getAllToursSortedByPriceDesc());
-    }
-
-    // Сортування за тривалістю (зростанням)
-    @GetMapping("/sorted/durationAsc")
-    public ResponseEntity<List<TourSortDto>> getToursSortedByDurationAsc() {
-        return ResponseEntity.ok(tourService.getAllToursSortedByDurationAsc());
-    }
-
-    // Сортування за тривалістю (спаданням)
-    @GetMapping("/sorted/durationDesc")
-    public ResponseEntity<List<TourSortDto>> getToursSortedByDurationDesc() {
-        return ResponseEntity.ok(tourService.getAllToursSortedByDurationDesc());
-    }
-
-    // Гнучке сортування (по будь-якому полю)
     @GetMapping("/sorted")
-    public ResponseEntity<List<TourSortDto>> getAllToursSorted(
-            @RequestParam String sortBy,
-            @RequestParam String order) {
-
-        return ResponseEntity.ok(tourService.getAllToursSorted(sortBy, order));
+    public ResponseEntity<Page<TourDto>> getSortedTours(
+            @RequestParam(defaultValue = "name") String sortBy,
+            @RequestParam(defaultValue = "asc") String order,
+            Pageable pageable) {
+        Page<TourDto> sortedTours = tourService.getSortedTours(sortBy, order, pageable);
+        return ResponseEntity.ok(sortedTours);
+    }
+    @GetMapping("/filtered")
+    public ResponseEntity<Page<TourDto>> getFilteredTours(
+            @RequestParam(required = false) String name,
+            @RequestParam(required = false) String destination,
+            @RequestParam(required = false) Integer duration,
+            @RequestParam(required = false) Double minPrice,
+            @RequestParam(required = false) Double maxPrice,
+            @RequestParam(required = false) @DateTimeFormat(pattern = "yyyy-MM-dd") Date departureDate,
+            @RequestParam(required = false) @DateTimeFormat(pattern = "yyyy-MM-dd") Date returnDate,
+            @RequestParam(required = false) TypeEnum type,
+            @RequestParam(required = false) Integer maxParticipants,
+            Pageable pageable) {
+        Page<TourDto> filteredTours = tourService.getFilteredTours(
+                name, destination, duration, minPrice, maxPrice, departureDate, returnDate, type, maxParticipants, pageable
+        );
+        return ResponseEntity.ok(filteredTours);
     }
 }

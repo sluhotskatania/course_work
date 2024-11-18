@@ -8,6 +8,8 @@ import com.example.course_work.enums.LanguagesEnum;
 import com.example.course_work.service.GuideService;
 import jakarta.validation.Valid;
 import lombok.AllArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -32,22 +34,30 @@ public class GuideController {
     public ResponseEntity<List<GuideSortDto>> getAllGuides() {
         return ResponseEntity.ok(guideService.getAllGuides());
     }
-    @GetMapping("/filter/languages")
-    public ResponseEntity<List<GuideSortDto>> getGuidesByLanguages(@RequestParam String languages) {
-        try {
-            LanguagesEnum languageEnum = LanguagesEnum.valueOf(languages.toUpperCase());
-            return ResponseEntity.ok(guideService.getGuidesByLanguages(languageEnum));
-        } catch (IllegalArgumentException e) {
-            return ResponseEntity.badRequest().body(null);
-        }
+    @GetMapping("/sorted")
+    public ResponseEntity<Page<GuideDto>> getSortedGuides(
+                @RequestParam(defaultValue = "name") String sortBy,
+                @RequestParam(defaultValue = "asc") String order,
+                Pageable pageable) {
+            Page<GuideDto> sortedGuides = guideService.getSortedGuides(sortBy, order, pageable);
+            return ResponseEntity.ok(sortedGuides);
     }
 
-    @GetMapping("/sorted/ratingAsc")
-    public ResponseEntity<List<GuideSortDto>> getGuidesSortedByRatingAsc() {
-        return ResponseEntity.ok(guideService.getAllGuidesSortedByRatingAsc());
-    }
-    @GetMapping("/sorted/ratingDesc")
-    public ResponseEntity<List<GuideSortDto>> getToursSortedByPriceDesc() {
-        return ResponseEntity.ok(guideService.getAllGuidesSortedByRatingDesc());
+    @GetMapping("/filtered")
+    public ResponseEntity<Page<GuideDto>> getFilteredGuides(
+                @RequestParam(required = false) String name,
+                @RequestParam(required = false) String surname,
+                @RequestParam(required = false) String email,
+                @RequestParam(required = false) String phone,
+                @RequestParam(required = false) LanguagesEnum language,
+                @RequestParam(required = false) Integer minExperience,
+                @RequestParam(required = false) Integer maxExperience,
+                @RequestParam(required = false) Double minRating,
+                @RequestParam(required = false) Double maxRating,
+                Pageable pageable) {
+            Page<GuideDto> filteredGuides = guideService.getFilteredGuides(
+                    name, surname, email, phone, language, minExperience, maxExperience, minRating, maxRating, pageable);
+            return ResponseEntity.ok(filteredGuides);
     }
 }
+

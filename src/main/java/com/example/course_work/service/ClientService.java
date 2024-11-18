@@ -10,9 +10,15 @@ import com.example.course_work.repository.BookingRepository;
 import com.example.course_work.repository.ClientRepository;
 
 import lombok.AllArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
+import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.Date;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -39,36 +45,50 @@ public class ClientService {
                 .map(clientMapper::toDto)
                 .toList();
     }
-    @Transactional(readOnly = true)
-    public List<ClientDto> getClientsByName(String name) {
-        return clientRepository.findByNameContainingIgnoreCase(name)
-                .stream()
-                .map(clientMapper::toDto)
-                .toList();
-    }
-    @Transactional(readOnly = true)
-    public List<ClientDto> getClientsBySurname(String surname) {
-        return clientRepository.findBySurnameContainingIgnoreCase(surname)
-                .stream()
-                .map(clientMapper::toDto)
-                .toList();
-    }
-    public List<ClientDto> getClientsByNameAndSurname(String name, String surname) {
-        List<Client> clients;
 
-        if (name != null && surname != null) {
-            clients = clientRepository.findByNameContainingIgnoreCaseAndSurnameContainingIgnoreCase(name, surname);
-        } else if (name != null) {
-            clients = clientRepository.findByNameContainingIgnoreCase(name);
-        } else if (surname != null) {
-            clients = clientRepository.findBySurnameContainingIgnoreCase(surname);
-        } else {
-            clients = clientRepository.findAll();
+    @Transactional(readOnly = true)
+    public Page<ClientDto> getSortedClients(String sortBy, String order, Pageable pageable) {
+        Sort.Direction direction = "asc".equalsIgnoreCase(order) ? Sort.Direction.ASC : Sort.Direction.DESC;
+        Pageable sortedPageable = PageRequest.of(pageable.getPageNumber(), pageable.getPageSize(), Sort.by(direction, sortBy));
+        Page<Client> clients = clientRepository.findAll(sortedPageable);
+        return clients.map(client -> new ClientDto(
+                client.getId(), client.getCreated(), client.getName(), client.getSurname(),
+                client.getEmail(), client.getPhone(), client.getBirthDate()
+        ));
+    }
+    @Transactional(readOnly = true)
+    public Page<ClientDto> getFilteredClients(String name, String surname, String email, String phone, Date minBirthDate, Date maxBirthDate, Pageable pageable) {
+        Specification<Client> specification = Specification.where(null);
+
+        if (name != null && !name.isEmpty()) {
+            specification = specification.and((root, query, criteriaBuilder) ->
+                    criteriaBuilder.like(criteriaBuilder.lower(root.get("name")), "%" + name.toLowerCase() + "%"));
+        }
+        if (surname != null && !surname.isEmpty()) {
+            specification = specification.and((root, query, criteriaBuilder) ->
+                    criteriaBuilder.like(criteriaBuilder.lower(root.get("surname")), "%" + surname.toLowerCase() + "%"));
+        }
+        if (email != null && !email.isEmpty()) {
+            specification = specification.and((root, query, criteriaBuilder) ->
+                    criteriaBuilder.like(criteriaBuilder.lower(root.get("email")), "%" + email.toLowerCase() + "%"));
+        }
+        if (phone != null && !phone.isEmpty()) {
+            specification = specification.and((root, query, criteriaBuilder) ->
+                    criteriaBuilder.like(criteriaBuilder.lower(root.get("phone")), "%" + phone.toLowerCase() + "%"));
+        }
+        if (minBirthDate != null) {
+            specification = specification.and((root, query, criteriaBuilder) ->
+                    criteriaBuilder.greaterThanOrEqualTo(root.get("birthDate"), minBirthDate));
+        }
+        if (maxBirthDate != null) {
+            specification = specification.and((root, query, criteriaBuilder) ->
+                    criteriaBuilder.lessThanOrEqualTo(root.get("birthDate"), maxBirthDate));
         }
 
-        return clients.stream()
-                .map(clientMapper::toDto)
-                .collect(Collectors.toList());
+        Page<Client> clients = clientRepository.findAll(specification, pageable);
+        return clients.map(client -> new ClientDto(client.getId(), client.getCreated(), client.getName(),
+                client.getSurname(), client.getEmail(), client.getPhone(), client.getBirthDate()));
     }
+
 
 }

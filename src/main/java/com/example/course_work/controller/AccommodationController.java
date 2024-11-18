@@ -2,10 +2,15 @@ package com.example.course_work.controller;
 
 import com.example.course_work.dto.AccommodationCreationDto;
 import com.example.course_work.dto.AccommodationDto;
+import com.example.course_work.dto.BookingDto;
 import com.example.course_work.enums.TypeAccommodationEnum;
 import com.example.course_work.service.AccommodationService;
 import jakarta.validation.Valid;
 import lombok.AllArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -30,17 +35,30 @@ public class AccommodationController {
     public ResponseEntity<List<AccommodationDto>> getAllAccommodations() {
         return ResponseEntity.ok(accommodationService.getAllAccommodations());
     }
-    @GetMapping("/filter/type")
-    public ResponseEntity<List<AccommodationDto>> getTourAccommodationsByType(@RequestParam String type) {
-        try {
-            TypeAccommodationEnum typeAccommodationEnum = TypeAccommodationEnum.valueOf(type.toUpperCase());
-            return ResponseEntity.ok(accommodationService.getTourAccommodationsByType(typeAccommodationEnum));
-        } catch (IllegalArgumentException e) {
-            return ResponseEntity.badRequest().body(null);
-        }
+    @GetMapping("/sorted")
+    public ResponseEntity<Page<AccommodationDto>> getSortedAccommodations(
+            @RequestParam String sortBy,
+            @RequestParam String order,
+            Pageable pageable) {
+
+        Page<AccommodationDto> accommodations = accommodationService.getSortedAccommodations(sortBy, order, pageable);
+        return ResponseEntity.ok(accommodations);
     }
-    @GetMapping("/filter/location")
-    public ResponseEntity<List<AccommodationDto>> getAccommodationsByLocation(@RequestParam String location) {
-        return ResponseEntity.ok(accommodationService.getAccommodationsByLocation(location));
+    @GetMapping("/filtered")
+    public ResponseEntity<Page<AccommodationDto>> getFilteredAccommodations(
+            @RequestParam(required = false) String name,
+            @RequestParam(required = false) String location,
+            @RequestParam(required = false) TypeAccommodationEnum type,
+            @RequestParam(required = false) Double minPrice,
+            @RequestParam(required = false) Double maxPrice,
+            @RequestParam(required = false) Integer minAvailability,
+            @RequestParam(required = false) Integer maxAvailability,
+            Pageable pageable) {
+
+        Page<AccommodationDto> accommodations = accommodationService.getFilteredAccommodations(
+                name, location, type, minPrice, maxPrice, minAvailability, maxAvailability, pageable);
+
+        return ResponseEntity.ok(accommodations);
     }
+
 }
