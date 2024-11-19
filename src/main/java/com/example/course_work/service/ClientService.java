@@ -9,6 +9,7 @@ import com.example.course_work.mapper.ClientMapper;
 import com.example.course_work.repository.BookingRepository;
 import com.example.course_work.repository.ClientRepository;
 import lombok.AllArgsConstructor;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
@@ -30,6 +31,7 @@ public class ClientService {
     private final BookingMapper bookingMapper;
 
     @Transactional(readOnly=true)
+    @Cacheable(value = "clients", key = "#id")
     public ClientDto getById(Long id){
         Client client =clientRepository.findById(id).orElseThrow();
        return clientMapper.toDto(client);
@@ -38,6 +40,7 @@ public class ClientService {
         return clientMapper.toDto(clientRepository.save(clientMapper.toEntity(client)));
     }
     @Transactional(readOnly = true)
+    @Cacheable(value = "clients")
     public List<ClientDto> getAllClients() {
         return clientRepository.findAll().stream()
                 .map(clientMapper::toDto)

@@ -8,6 +8,7 @@ import com.example.course_work.exception.AccommodationNotFound;
 import com.example.course_work.mapper.AccommodationMapper;
 import com.example.course_work.repository.AccommodationRepository;
 import lombok.AllArgsConstructor;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
@@ -26,6 +27,7 @@ public class AccommodationService {
     private final AccommodationMapper accommodationMapper;
 
     @Transactional(readOnly = true)
+    @Cacheable(value = "accommodations", key = "#id")
     public AccommodationDto getById(Long id){
         Accommodation accommodation =accommodationRepository.findById(id).orElseThrow();
         return accommodationMapper.toDto(accommodation);
@@ -34,6 +36,7 @@ public class AccommodationService {
         return accommodationMapper.toDto(accommodationRepository.save(accommodationMapper.toEntity(accommodation)));
     }
     @Transactional(readOnly = true)
+    @Cacheable(value = "accommodations")
     public List<AccommodationDto> getAllAccommodations() {
         return accommodationRepository.findAll().stream()
                 .map(accommodationMapper::toDto)

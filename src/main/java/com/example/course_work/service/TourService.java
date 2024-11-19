@@ -12,6 +12,7 @@ import com.example.course_work.repository.AccommodationRepository;
 import com.example.course_work.repository.BookingRepository;
 import com.example.course_work.repository.TourRepository;
 import lombok.AllArgsConstructor;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
@@ -33,6 +34,7 @@ public class TourService {
     private final AccommodationRepository accommodationRepository;
 
     @Transactional(readOnly = true)
+    @Cacheable(value = "tours", key = "#id")
     public TourDto getById(Long id) {
         Tour tour = tourRepository.findById(id).orElseThrow();
         return tourMapper.toDto(tour);
@@ -51,6 +53,7 @@ public class TourService {
     }
 
     @Transactional(readOnly = true)
+    @Cacheable(value = "tours")
     public List<TourDto> getAllTours() {
         return tourRepository.findAll().stream()
                 .map(tourMapper::toDto)

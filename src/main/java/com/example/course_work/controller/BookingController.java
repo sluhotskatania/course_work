@@ -23,7 +23,7 @@ import java.util.List;
 
 @RestController
 @AllArgsConstructor
-@RequestMapping("api/booking")
+@RequestMapping("api/bookings")
 public class BookingController {
     private final BookingServise bookingServise;
 

@@ -20,7 +20,7 @@ import java.util.List;
 
 @RestController
 @AllArgsConstructor
-@RequestMapping("api/tour")
+@RequestMapping("api/tours")
 public class TourController {
     public final TourService tourService;
 

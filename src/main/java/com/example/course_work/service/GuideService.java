@@ -9,6 +9,7 @@ import com.example.course_work.mapper.GuideMapper;
 import com.example.course_work.repository.GuideRepository;
 import com.example.course_work.repository.TourRepository;
 import lombok.AllArgsConstructor;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
@@ -28,6 +29,7 @@ public class GuideService {
     private final TourRepository tourRepository;
 
     @Transactional(readOnly = true)
+    @Cacheable(value = "guides", key = "#id")
     public GuideDto getById(Long id){
         Guide guide =guideRepository.findById(id).orElseThrow();
         return guideMapper.toDto(guide);
@@ -41,6 +43,7 @@ public class GuideService {
         return guideMapper.toDto(savedGuide);
     }
     @Transactional(readOnly = true)
+    @Cacheable(value = "guides")
     public List<GuideSortDto> getAllGuides() {
         return guideRepository.findAll().stream()
                 .map(guideMapper::toGdSortDto)

@@ -20,7 +20,7 @@ import java.util.List;
 
 @RestController
 @AllArgsConstructor
-@RequestMapping("api/client")
+@RequestMapping("api/clients")
 public class ClientController {
     private final ClientService clientService;
 
