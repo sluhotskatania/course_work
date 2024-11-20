@@ -9,9 +9,9 @@ import java.util.Date;
 /**
  * DTO for {@link com.example.course_work.entity.Tour}
  */
-public record TourDto(long id, Date created, String name, String destination, Integer duration, Double price,
+public record TourDto(Long id, Date created, String name, String destination, Integer duration, Double price,
                       Date departureDate, Date returnDate, TypeEnum type,
-                      Integer maxParticipants, long accommodationId, String accommodationName,
+                      Integer maxParticipants, Long accommodationId, String accommodationName,
                       String accommodationLocation, TypeAccommodationEnum accommodationType,
-                      Double accommodationPricePerNight, long bookingId, Double bookingTotalPrice, String bookingNotes) implements Serializable {
+                      Double accommodationPricePerNight, Long bookingId, Double bookingTotalPrice, String bookingNotes) implements Serializable {
 }

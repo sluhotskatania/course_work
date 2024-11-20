@@ -5,6 +5,6 @@ import java.util.Date;
 /**
  * DTO for {@link com.example.course_work.entity.Client}
  */
-public record ClientDto(long id, Date created, String name, String surname, String email, String phone,
+public record ClientDto(Long id, Date created, String name, String surname, String email, String phone,
                         Date birthDate) implements Serializable {
 }

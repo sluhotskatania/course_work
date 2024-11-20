@@ -10,6 +10,8 @@ import com.example.course_work.enums.PaymentStatusEnum;
 import com.example.course_work.service.BookingServise;
 import jakarta.validation.Valid;
 import lombok.AllArgsConstructor;
+import org.springframework.cache.annotation.CacheEvict;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
@@ -28,14 +30,17 @@ public class BookingController {
     private final BookingServise bookingServise;
 
     @GetMapping("{id}")
+    @Cacheable(value = "bookings", key = "#id")
     public ResponseEntity<BookingDto> getById(@PathVariable("id")Long id){
         return ResponseEntity.ok(bookingServise.getById(id));
     }
     @PostMapping
+    @CacheEvict(value = "bookings", allEntries = true)
     public ResponseEntity<BookingDto> addBooking(@Valid @RequestBody BookingCreationDto bookingCreationDto) {
         return new ResponseEntity<>(bookingServise.createBooking(bookingCreationDto), HttpStatus.CREATED);
     }
     @GetMapping
+    @Cacheable(value = "bookings")
     public ResponseEntity<List<BookingDto>> getAllBookings() {
         return ResponseEntity.ok(bookingServise.getAllBookings());
     }
@@ -59,6 +64,7 @@ public class BookingController {
         return bookingServise.getFilteredBookings(client, startDate, endDate, status, paymentStatus, minPrice, maxPrice, pageable);
     }
     @PutMapping("/{id}")
+    @CacheEvict(value = "bookings", allEntries = true)
     public ResponseEntity<BookingDto> updateBooking(@PathVariable Long id, @RequestBody @Valid BookingDto bookingDto) {
         BookingDto updateBooking = bookingServise.updateBooking(id, bookingDto);
         return ResponseEntity.ok(updateBooking);

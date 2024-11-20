@@ -34,7 +34,6 @@ public class TourService {
     private final AccommodationRepository accommodationRepository;
 
     @Transactional(readOnly = true)
-    @Cacheable(value = "tours", key = "#id")
     public TourDto getById(Long id) {
         Tour tour = tourRepository.findById(id).orElseThrow();
         return tourMapper.toDto(tour);
@@ -53,14 +52,11 @@ public class TourService {
     }
 
     @Transactional(readOnly = true)
-    @Cacheable(value = "tours")
     public List<TourDto> getAllTours() {
         return tourRepository.findAll().stream()
                 .map(tourMapper::toDto)
                 .toList();
     }
-
-
     @Transactional(readOnly = true)
     public Page<TourDto> getSortedTours(String sortBy, String order, Pageable pageable) {
         Sort.Direction direction = "asc".equalsIgnoreCase(order) ? Sort.Direction.ASC : Sort.Direction.DESC;

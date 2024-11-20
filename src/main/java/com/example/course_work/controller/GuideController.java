@@ -5,6 +5,8 @@ import com.example.course_work.enums.LanguagesEnum;
 import com.example.course_work.service.GuideService;
 import jakarta.validation.Valid;
 import lombok.AllArgsConstructor;
+import org.springframework.cache.annotation.CacheEvict;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
@@ -20,14 +22,17 @@ public class GuideController {
     private final GuideService guideService;
 
     @GetMapping("{id}")
+    @Cacheable(value = "guides", key = "#id")
     public ResponseEntity<GuideDto> getById(@PathVariable("id")Long id){
         return ResponseEntity.ok(guideService.getById(id));
     }
     @PostMapping
+    @CacheEvict(value = "guides", allEntries = true)
     public ResponseEntity<GuideDto> addGuide(@Valid @RequestBody GuideCreationDto guideCreationDto) {
         return new ResponseEntity<>(guideService.createGuide(guideCreationDto), HttpStatus.CREATED);
     }
     @GetMapping
+    @Cacheable(value = "guides")
     public ResponseEntity<List<GuideSortDto>> getAllGuides() {
         return ResponseEntity.ok(guideService.getAllGuides());
     }
@@ -57,6 +62,7 @@ public class GuideController {
             return ResponseEntity.ok(filteredGuides);
     }
     @PutMapping("/{id}")
+    @CacheEvict(value = "guides", allEntries = true)
     public ResponseEntity<GuideDto> updateGuide(@PathVariable Long id, @RequestBody @Valid GuideDto guideDto) {
         GuideDto updateGuide = guideService.updateGuide(id, guideDto);
         return ResponseEntity.ok(updateGuide);

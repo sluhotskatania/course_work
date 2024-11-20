@@ -5,6 +5,8 @@ import com.example.course_work.service.ClientService;
 import com.example.course_work.service.TourService;
 import jakarta.validation.Valid;
 import lombok.AllArgsConstructor;
+import org.springframework.cache.annotation.CacheEvict;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
@@ -25,14 +27,17 @@ public class ClientController {
     private final ClientService clientService;
 
     @GetMapping("{id}")
+    @Cacheable(value = "clients", key = "#id")
     public ResponseEntity<ClientDto>getById(@PathVariable("id")Long id){
         return ResponseEntity.ok(clientService.getById(id));
     }
        @PostMapping
-    public ResponseEntity<ClientDto> addClient(@Valid @RequestBody ClientCreationDto clientCreationDto) {
+       @CacheEvict(value = "clients", allEntries = true)
+       public ResponseEntity<ClientDto> addClient(@Valid @RequestBody ClientCreationDto clientCreationDto) {
            return new ResponseEntity<>(clientService.createClient(clientCreationDto), HttpStatus.CREATED);
        }
     @GetMapping
+    @Cacheable(value = "clients")
     public ResponseEntity<List<ClientDto>> getAllClients() {
         return ResponseEntity.ok(clientService.getAllClients());
     }
@@ -58,6 +63,7 @@ public class ClientController {
         return ResponseEntity.ok(filteredClients);
     }
     @PutMapping("/{id}")
+    @CacheEvict(value = "clients", allEntries = true)
     public ResponseEntity<ClientDto> updateClient(@PathVariable Long id, @RequestBody @Valid ClientDto clientDto) {
         ClientDto updateClient = clientService.updateClient(id, clientDto);
         return ResponseEntity.ok(updateClient);

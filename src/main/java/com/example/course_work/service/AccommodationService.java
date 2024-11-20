@@ -27,7 +27,6 @@ public class AccommodationService {
     private final AccommodationMapper accommodationMapper;
 
     @Transactional(readOnly = true)
-    @Cacheable(value = "accommodations", key = "#id")
     public AccommodationDto getById(Long id){
         Accommodation accommodation =accommodationRepository.findById(id).orElseThrow();
         return accommodationMapper.toDto(accommodation);
@@ -36,7 +35,6 @@ public class AccommodationService {
         return accommodationMapper.toDto(accommodationRepository.save(accommodationMapper.toEntity(accommodation)));
     }
     @Transactional(readOnly = true)
-    @Cacheable(value = "accommodations")
     public List<AccommodationDto> getAllAccommodations() {
         return accommodationRepository.findAll().stream()
                 .map(accommodationMapper::toDto)

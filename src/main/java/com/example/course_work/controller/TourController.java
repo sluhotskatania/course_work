@@ -8,6 +8,8 @@ import com.example.course_work.enums.TypeEnum;
 import com.example.course_work.service.TourService;
 import jakarta.validation.Valid;
 import lombok.AllArgsConstructor;
+import org.springframework.cache.annotation.CacheEvict;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.format.annotation.DateTimeFormat;
@@ -25,14 +27,17 @@ public class TourController {
     public final TourService tourService;
 
     @GetMapping("{id}")
+    @Cacheable(value = "tours", key = "#id")
     public ResponseEntity<TourDto> getById(@PathVariable("id")Long id){
         return ResponseEntity.ok(tourService.getById(id));
     }
     @PostMapping
+    @CacheEvict(value = "tours", allEntries = true)
     public ResponseEntity<TourDto> addTour(@Valid @RequestBody TourCreationDto tourCreationDto) {
         return new ResponseEntity<>(tourService.createTour(tourCreationDto), HttpStatus.CREATED);
     }
     @GetMapping
+    @Cacheable(value = "tours")
     public ResponseEntity<List<TourDto>> getAllTours() {
         return ResponseEntity.ok(tourService.getAllTours());
     }
@@ -62,6 +67,7 @@ public class TourController {
         return ResponseEntity.ok(filteredTours);
     }
     @PutMapping("/{id}")
+    @CacheEvict(value = "tours", allEntries = true)
     public ResponseEntity<TourDto> updateTour(@PathVariable Long id, @RequestBody @Valid TourDto tourDto) {
         TourDto updateTour = tourService.updateTour(id, tourDto);
         return ResponseEntity.ok(updateTour);

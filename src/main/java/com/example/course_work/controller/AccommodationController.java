@@ -7,10 +7,10 @@ import com.example.course_work.enums.TypeAccommodationEnum;
 import com.example.course_work.service.AccommodationService;
 import jakarta.validation.Valid;
 import lombok.AllArgsConstructor;
+import org.springframework.cache.annotation.CacheEvict;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.data.domain.Page;
-import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
-import org.springframework.data.domain.Sort;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -24,14 +24,17 @@ public class AccommodationController {
     private final AccommodationService accommodationService;
 
     @GetMapping("{id}")
+    @Cacheable(value = "accommodations", key = "#id")
     public ResponseEntity<AccommodationDto> getById(@PathVariable("id")Long id){
         return ResponseEntity.ok(accommodationService.getById(id));
     }
     @PostMapping
+    @CacheEvict(value = "accommodations", allEntries = true)
     public ResponseEntity<AccommodationDto> addAccommodation(@Valid @RequestBody AccommodationCreationDto accommodationCreationDto) {
         return new ResponseEntity<>(accommodationService.createAccommodation(accommodationCreationDto), HttpStatus.CREATED);
     }
     @GetMapping
+    @Cacheable(value = "accommodations")
     public ResponseEntity<List<AccommodationDto>> getAllAccommodations() {
         return ResponseEntity.ok(accommodationService.getAllAccommodations());
     }
@@ -61,6 +64,7 @@ public class AccommodationController {
         return ResponseEntity.ok(accommodations);
     }
     @PutMapping("/{id}")
+    @CacheEvict(value = "accommodations", allEntries = true)
     public ResponseEntity<AccommodationDto> updateAccommodation(@PathVariable Long id, @RequestBody @Valid AccommodationDto accommodationDto) {
         AccommodationDto updateAccommodation = accommodationService.updateAccommodation(id, accommodationDto);
         return ResponseEntity.ok(updateAccommodation);
