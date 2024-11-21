@@ -24,10 +24,14 @@ import org.springframework.transaction.annotation.Transactional;
 import java.util.Date;
 import java.util.List;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 @Service
 @AllArgsConstructor
 @Transactional
 public class TourService {
+    private static final Logger logger = LoggerFactory.getLogger(TourService.class);
     private final TourRepository tourRepository;
     private final TourMapper tourMapper;
     private final BookingRepository bookingRepository;
@@ -35,98 +39,170 @@ public class TourService {
 
     @Transactional(readOnly = true)
     public TourDto getById(Long id) {
-        Tour tour = tourRepository.findById(id).orElseThrow();
-        return tourMapper.toDto(tour);
+        logger.info("Fetching tour by ID: {}", id);
+        try {
+            Tour tour = tourRepository.findById(id)
+                    .orElseThrow(() -> new TourNotFound("Tour not found"));
+            logger.info("Tour with ID {} fetched successfully", id);
+            return tourMapper.toDto(tour);
+        } catch (TourNotFound e) {
+            logger.warn("Tour with ID {} not found", id, e);
+            throw e;
+        } catch (Exception e) {
+            logger.error("Error while fetching tour by ID: {}", id, e);
+            throw e;
+        }
     }
 
+    @Transactional
     public TourDto createTour(TourCreationDto tourCreationDto) {
-        Booking booking = bookingRepository.findById(tourCreationDto.bookingId())
-                .orElseThrow(() -> new IllegalArgumentException("Booking not found with ID: " + tourCreationDto.bookingId()));
-        Tour tour = tourMapper.toEntity(tourCreationDto);
-        tour.setBooking(booking);
+        logger.info("Creating a new tour with Booking ID: {} and Accommodation ID: {}",
+                tourCreationDto.bookingId(), tourCreationDto.accommodationId());
+        try {
+            Booking booking = bookingRepository.findById(tourCreationDto.bookingId())
+                    .orElseThrow(() -> new IllegalArgumentException("Booking not found with ID: " + tourCreationDto.bookingId()));
+            logger.debug("Booking with ID {} found", tourCreationDto.bookingId());
 
-        Accommodation accommodation = accommodationRepository.findById(tourCreationDto.accommodationId())
-                .orElseThrow(() -> new IllegalArgumentException("Accommodation not found with ID: " + tourCreationDto.accommodationId()));
-        tour.setAccommodation(accommodation);
-        return tourMapper.toDto(tourRepository.save(tour));
+            Accommodation accommodation = accommodationRepository.findById(tourCreationDto.accommodationId())
+                    .orElseThrow(() -> new IllegalArgumentException("Accommodation not found with ID: " + tourCreationDto.accommodationId()));
+            logger.debug("Accommodation with ID {} found", tourCreationDto.accommodationId());
+
+            Tour tour = tourMapper.toEntity(tourCreationDto);
+            tour.setBooking(booking);
+            tour.setAccommodation(accommodation);
+
+            Tour savedTour = tourRepository.save(tour);
+            logger.info("Tour created successfully with ID: {}", savedTour.getId());
+            return tourMapper.toDto(savedTour);
+        } catch (IllegalArgumentException e) {
+            logger.warn("Error creating tour: {}", e.getMessage(), e);
+            throw e;
+        } catch (Exception e) {
+            logger.error("Unexpected error while creating tour", e);
+            throw e;
+        }
     }
 
     @Transactional(readOnly = true)
     public List<TourDto> getAllTours() {
-        return tourRepository.findAll().stream()
-                .map(tourMapper::toDto)
-                .toList();
+        logger.info("Fetching all tours");
+        try {
+            List<TourDto> tours = tourRepository.findAll().stream()
+                    .map(tourMapper::toDto)
+                    .toList();
+            logger.info("Successfully fetched {} tours", tours.size());
+            return tours;
+        } catch (Exception e) {
+            logger.error("Error while fetching all tours", e);
+            throw e;
+        }
     }
+
     @Transactional(readOnly = true)
     public Page<TourDto> getSortedTours(String sortBy, String order, Pageable pageable) {
-        Sort.Direction direction = "asc".equalsIgnoreCase(order) ? Sort.Direction.ASC : Sort.Direction.DESC;
-        Pageable sortedPageable = PageRequest.of(pageable.getPageNumber(), pageable.getPageSize(), Sort.by(direction, sortBy));
-        Page<Tour> tours = tourRepository.findAll(sortedPageable);
+        logger.info("Fetching sorted tours with sortBy: {} and order: {}", sortBy, order);
+        try {
+            Sort.Direction direction = "asc".equalsIgnoreCase(order) ? Sort.Direction.ASC : Sort.Direction.DESC;
+            Pageable sortedPageable = PageRequest.of(pageable.getPageNumber(), pageable.getPageSize(), Sort.by(direction, sortBy));
+            Page<Tour> tours = tourRepository.findAll(sortedPageable);
 
-        return tours.map(tour -> new TourDto(tour.getId(), tour.getCreated(),tour.getName(), tour.getDestination(), tour.getDuration(),
-                tour.getPrice(), tour.getDepartureDate(), tour.getReturnDate(), tour.getType(), tour.getMaxParticipants(), tour.getAccommodation().getId(),
-                tour.getAccommodation().getName(), tour.getAccommodation().getLocation(), tour.getAccommodation().getType(), tour.getAccommodation().getPricePerNight(),
-                tour.getBooking().getId(), tour.getBooking().getTotalPrice(), tour.getBooking().getNotes()
-        ));
+            logger.info("Successfully fetched sorted tours");
+            return tours.map(tour -> new TourDto(
+                    tour.getId(), tour.getCreated(), tour.getName(), tour.getDestination(),
+                    tour.getDuration(), tour.getPrice(), tour.getDepartureDate(),
+                    tour.getReturnDate(), tour.getType(), tour.getMaxParticipants(),
+                    tour.getAccommodation().getId(), tour.getAccommodation().getName(),
+                    tour.getAccommodation().getLocation(), tour.getAccommodation().getType(),
+                    tour.getAccommodation().getPricePerNight(), tour.getBooking().getId(),
+                    tour.getBooking().getTotalPrice(), tour.getBooking().getNotes()
+            ));
+        } catch (Exception e) {
+            logger.error("Error fetching sorted tours", e);
+            throw e;
+        }
     }
-
     @Transactional(readOnly = true)
     public Page<TourDto> getFilteredTours(String name, String destination, Integer duration, Double minPrice, Double maxPrice,
                                           Date departureDate, Date returnDate, TypeEnum type, Integer maxParticipants,
                                           Pageable pageable) {
-        Specification<Tour> specification = Specification.where(null);
+        logger.info("Fetching filtered tours with criteria: name={}, destination={}, duration={}, minPrice={}, maxPrice={}, " +
+                        "departureDate={}, returnDate={}, type={}, maxParticipants={}",
+                name, destination, duration, minPrice, maxPrice, departureDate, returnDate, type, maxParticipants);
+        try {
+            Specification<Tour> specification = Specification.where(null);
 
-        if (name != null && !name.isEmpty()) {
-            specification = specification.and((root, query, criteriaBuilder) ->
-                    criteriaBuilder.like(criteriaBuilder.lower(root.get("name")), "%" + name.toLowerCase() + "%"));
-        }
-        if (destination != null && !destination.isEmpty()) {
-            specification = specification.and((root, query, criteriaBuilder) ->
-                    criteriaBuilder.like(criteriaBuilder.lower(root.get("destination")), "%" + destination.toLowerCase() + "%"));
-        }
-        if (duration != null) {
-            specification = specification.and((root, query, criteriaBuilder) ->
-                    criteriaBuilder.equal(root.get("duration"), duration));
-        }
-        if (minPrice != null) {
-            specification = specification.and((root, query, criteriaBuilder) ->
-                    criteriaBuilder.greaterThanOrEqualTo(root.get("price"), minPrice));
-        }
-        if (maxPrice != null) {
-            specification = specification.and((root, query, criteriaBuilder) ->
-                    criteriaBuilder.lessThanOrEqualTo(root.get("price"), maxPrice));
-        }
-        if (departureDate != null) {
-            specification = specification.and((root, query, criteriaBuilder) ->
-                    criteriaBuilder.greaterThanOrEqualTo(root.get("departureDate"), departureDate));
-        }
-        if (returnDate != null) {
-            specification = specification.and((root, query, criteriaBuilder) ->
-                    criteriaBuilder.lessThanOrEqualTo(root.get("returnDate"), returnDate));
-        }
-        if (type != null) {
-            specification = specification.and((root, query, criteriaBuilder) ->
-                    criteriaBuilder.equal(root.get("type"), type));
-        }
-        if (maxParticipants != null) {
-            specification = specification.and((root, query, criteriaBuilder) ->
-                    criteriaBuilder.equal(root.get("maxParticipants"), maxParticipants));
-        }
+            if (name != null && !name.isEmpty()) {
+                specification = specification.and((root, query, criteriaBuilder) ->
+                        criteriaBuilder.like(criteriaBuilder.lower(root.get("name")), "%" + name.toLowerCase() + "%"));
+            }
+            if (destination != null && !destination.isEmpty()) {
+                specification = specification.and((root, query, criteriaBuilder) ->
+                        criteriaBuilder.like(criteriaBuilder.lower(root.get("destination")), "%" + destination.toLowerCase() + "%"));
+            }
+            if (duration != null) {
+                specification = specification.and((root, query, criteriaBuilder) ->
+                        criteriaBuilder.equal(root.get("duration"), duration));
+            }
+            if (minPrice != null) {
+                specification = specification.and((root, query, criteriaBuilder) ->
+                        criteriaBuilder.greaterThanOrEqualTo(root.get("price"), minPrice));
+            }
+            if (maxPrice != null) {
+                specification = specification.and((root, query, criteriaBuilder) ->
+                        criteriaBuilder.lessThanOrEqualTo(root.get("price"), maxPrice));
+            }
+            if (departureDate != null) {
+                specification = specification.and((root, query, criteriaBuilder) ->
+                        criteriaBuilder.greaterThanOrEqualTo(root.get("departureDate"), departureDate));
+            }
+            if (returnDate != null) {
+                specification = specification.and((root, query, criteriaBuilder) ->
+                        criteriaBuilder.lessThanOrEqualTo(root.get("returnDate"), returnDate));
+            }
+            if (type != null) {
+                specification = specification.and((root, query, criteriaBuilder) ->
+                        criteriaBuilder.equal(root.get("type"), type));
+            }
+            if (maxParticipants != null) {
+                specification = specification.and((root, query, criteriaBuilder) ->
+                        criteriaBuilder.equal(root.get("maxParticipants"), maxParticipants));
+            }
 
-        Page<Tour> tours = tourRepository.findAll(specification, pageable);
+            Page<Tour> tours = tourRepository.findAll(specification, pageable);
 
-        return tours.map(tour -> new TourDto(tour.getId(), tour.getCreated(), tour.getName(), tour.getDestination(), tour.getDuration(), tour.getPrice(),
-                tour.getDepartureDate(), tour.getReturnDate(), tour.getType(), tour.getMaxParticipants(), tour.getAccommodation().getId(),
-                tour.getAccommodation().getName(), tour.getAccommodation().getLocation(), tour.getAccommodation().getType(), tour.getAccommodation().getPricePerNight(),
-                tour.getBooking().getId(), tour.getBooking().getTotalPrice(), tour.getBooking().getNotes()
-        ));
+            logger.info("Successfully fetched {} filtered tours", tours.getTotalElements());
+            return tours.map(tour -> new TourDto(
+                    tour.getId(), tour.getCreated(), tour.getName(), tour.getDestination(), tour.getDuration(),
+                    tour.getPrice(), tour.getDepartureDate(), tour.getReturnDate(), tour.getType(),
+                    tour.getMaxParticipants(), tour.getAccommodation().getId(),
+                    tour.getAccommodation().getName(), tour.getAccommodation().getLocation(),
+                    tour.getAccommodation().getType(), tour.getAccommodation().getPricePerNight(),
+                    tour.getBooking().getId(), tour.getBooking().getTotalPrice(), tour.getBooking().getNotes()
+            ));
+        } catch (Exception e) {
+            logger.error("Error fetching filtered tours", e);
+            throw e;
+        }
     }
+    @Transactional
     public TourDto updateTour(Long id, TourDto tourDto) {
-        Tour tour = tourRepository.findById(id)
-                .orElseThrow(() -> new TourNotFound("Tour not found"));
-        tourMapper.partialUpdate(tourDto, tour);
-        return tourMapper.toDto(tourRepository.save(tour));
+        logger.info("Updating tour with ID: {}", id);
+        try {
+            Tour tour = tourRepository.findById(id)
+                    .orElseThrow(() -> new TourNotFound("Tour not found with ID: " + id));
+            tourMapper.partialUpdate(tourDto, tour);
+            Tour updatedTour = tourRepository.save(tour);
+            logger.info("Tour with ID {} updated successfully", id);
+            return tourMapper.toDto(updatedTour);
+        } catch (TourNotFound e) {
+            logger.warn("Tour not found for update with ID: {}", id, e);
+            throw e;
+        } catch (Exception e) {
+            logger.error("Error updating tour with ID: {}", id, e);
+            throw e;
+        }
     }
+
 
 
 }

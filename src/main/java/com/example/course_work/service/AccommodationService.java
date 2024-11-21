@@ -18,82 +18,138 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
-
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 @Service
 @AllArgsConstructor
 @Transactional
 public class AccommodationService {
+    private static final Logger logger = LoggerFactory.getLogger(AccommodationService.class);
+
     private final AccommodationRepository accommodationRepository;
     private final AccommodationMapper accommodationMapper;
 
     @Transactional(readOnly = true)
-    public AccommodationDto getById(Long id){
-        Accommodation accommodation =accommodationRepository.findById(id).orElseThrow();
-        return accommodationMapper.toDto(accommodation);
+    public AccommodationDto getById(Long id) {
+        logger.info("Fetching accommodation by ID: {}", id);
+        try {
+            Accommodation accommodation = accommodationRepository.findById(id).orElseThrow(() -> new AccommodationNotFound("Accommodation not found"));
+            logger.info("Accommodation with ID {} fetched successfully", id);
+            return accommodationMapper.toDto(accommodation);
+        } catch (AccommodationNotFound e) {
+            logger.warn("Accommodation with ID {} not found", id, e);
+            throw e;
+        } catch (Exception e) {
+            logger.error("Error while fetching accommodation by ID: {}", id, e);
+            throw e;
+        }
     }
     public AccommodationDto createAccommodation(AccommodationCreationDto accommodation) {
-        return accommodationMapper.toDto(accommodationRepository.save(accommodationMapper.toEntity(accommodation)));
+        logger.info("Creating accommodation: {}", accommodation);
+        try {
+            Accommodation savedAccommodation = accommodationRepository.save(accommodationMapper.toEntity(accommodation));
+            logger.info("Accommodation created successfully with ID: {}", savedAccommodation.getId());
+            return accommodationMapper.toDto(savedAccommodation);
+        } catch (Exception e) {
+            logger.error("Error while creating accommodation: {}", accommodation, e);
+            throw e;
+        }
     }
+
     @Transactional(readOnly = true)
     public List<AccommodationDto> getAllAccommodations() {
-        return accommodationRepository.findAll().stream()
-                .map(accommodationMapper::toDto)
-                .toList();
+        logger.info("Fetching all accommodations");
+        try {
+            List<AccommodationDto> accommodations = accommodationRepository.findAll().stream()
+                    .map(accommodationMapper::toDto)
+                    .toList();
+            logger.info("Successfully fetched {} accommodations", accommodations.size());
+            return accommodations;
+        } catch (Exception e) {
+            logger.error("Error while fetching all accommodations", e);
+            throw e;
+        }
     }
+
     @Transactional(readOnly = true)
     public Page<AccommodationDto> getSortedAccommodations(String sortBy, String order, Pageable pageable) {
-        Sort.Direction direction = "asc".equalsIgnoreCase(order) ? Sort.Direction.ASC : Sort.Direction.DESC;
-        Pageable sortedPageable = PageRequest.of(pageable.getPageNumber(), pageable.getPageSize(), Sort.by(direction, sortBy));
-        Page<Accommodation> accommodations = accommodationRepository.findAll(sortedPageable);
-        return accommodations.map(accommodation -> new AccommodationDto(accommodation.getId(), accommodation.getCreated(), accommodation.getName(),
-                accommodation.getLocation(), accommodation.getType(), accommodation.getPricePerNight(), accommodation.getAvailability()
-        ));
+        logger.info("Fetching sorted accommodations by {} in {} order", sortBy, order);
+        try {
+            Sort.Direction direction = "asc".equalsIgnoreCase(order) ? Sort.Direction.ASC : Sort.Direction.DESC;
+            Pageable sortedPageable = PageRequest.of(pageable.getPageNumber(), pageable.getPageSize(), Sort.by(direction, sortBy));
+            Page<Accommodation> accommodations = accommodationRepository.findAll(sortedPageable);
+            logger.info("Successfully fetched sorted accommodations");
+            return accommodations.map(accommodation -> new AccommodationDto(accommodation.getId(), accommodation.getCreated(), accommodation.getName(),
+                    accommodation.getLocation(), accommodation.getType(), accommodation.getPricePerNight(), accommodation.getAvailability()));
+        } catch (Exception e) {
+            logger.error("Error while fetching sorted accommodations by {} in {} order", sortBy, order, e);
+            throw e;
+        }
     }
+
     @Transactional(readOnly = true)
     public Page<AccommodationDto> getFilteredAccommodations(String name, String location, TypeAccommodationEnum type,
                                                             Double minPrice, Double maxPrice, Integer minAvailability,
                                                             Integer maxAvailability, Pageable pageable) {
-        Specification<Accommodation> specification = Specification.where(null);
-        if (name != null && !name.isEmpty()) {
-            specification = specification.and((root, query, criteriaBuilder) ->
-                    criteriaBuilder.like(criteriaBuilder.lower(root.get("name")), "%" + name.toLowerCase() + "%"));
+        logger.info("Fetching filtered accommodations with name: {}, location: {}, type: {}, price range: {}-{}, availability range: {}-{}",
+                name, location, type, minPrice, maxPrice, minAvailability, maxAvailability);
+        try {
+            Specification<Accommodation> specification = Specification.where(null);
+            if (name != null && !name.isEmpty()) {
+                specification = specification.and((root, query, criteriaBuilder) ->
+                        criteriaBuilder.like(criteriaBuilder.lower(root.get("name")), "%" + name.toLowerCase() + "%"));
+            }
+            if (location != null && !location.isEmpty()) {
+                specification = specification.and((root, query, criteriaBuilder) ->
+                        criteriaBuilder.like(criteriaBuilder.lower(root.get("location")), "%" + location.toLowerCase() + "%"));
+            }
+            if (type != null) {
+                specification = specification.and((root, query, criteriaBuilder) ->
+                        criteriaBuilder.equal(root.get("type"), type));
+            }
+            if (minPrice != null) {
+                specification = specification.and((root, query, criteriaBuilder) ->
+                        criteriaBuilder.greaterThanOrEqualTo(root.get("pricePerNight"), minPrice));
+            }
+            if (maxPrice != null) {
+                specification = specification.and((root, query, criteriaBuilder) ->
+                        criteriaBuilder.lessThanOrEqualTo(root.get("pricePerNight"), maxPrice));
+            }
+            if (minAvailability != null) {
+                specification = specification.and((root, query, criteriaBuilder) ->
+                        criteriaBuilder.greaterThanOrEqualTo(root.get("availability"), minAvailability));
+            }
+            if (maxAvailability != null) {
+                specification = specification.and((root, query, criteriaBuilder) ->
+                        criteriaBuilder.lessThanOrEqualTo(root.get("availability"), maxAvailability));
+            }
+            Page<Accommodation> accommodations = accommodationRepository.findAll(specification, pageable);
+            logger.info("Successfully fetched filtered accommodations");
+            return accommodations.map(accommodation -> new AccommodationDto(accommodation.getId(), accommodation.getCreated(), accommodation.getName(),
+                    accommodation.getLocation(), accommodation.getType(), accommodation.getPricePerNight(), accommodation.getAvailability()));
+        } catch (Exception e) {
+            logger.error("Error while fetching filtered accommodations", e);
+            throw e;
         }
-        if (location != null && !location.isEmpty()) {
-            specification = specification.and((root, query, criteriaBuilder) ->
-                    criteriaBuilder.like(criteriaBuilder.lower(root.get("location")), "%" + location.toLowerCase() + "%"));
-        }
-        if (type != null) {
-            specification = specification.and((root, query, criteriaBuilder) ->
-                    criteriaBuilder.equal(root.get("type"), type));
-        }
-        if (minPrice != null) {
-            specification = specification.and((root, query, criteriaBuilder) ->
-                    criteriaBuilder.greaterThanOrEqualTo(root.get("pricePerNight"), minPrice));
-        }
-        if (maxPrice != null) {
-            specification = specification.and((root, query, criteriaBuilder) ->
-                    criteriaBuilder.lessThanOrEqualTo(root.get("pricePerNight"), maxPrice));
-        }
-        if (minAvailability != null) {
-            specification = specification.and((root, query, criteriaBuilder) ->
-                    criteriaBuilder.greaterThanOrEqualTo(root.get("availability"), minAvailability));
-        }
-        if (maxAvailability != null) {
-            specification = specification.and((root, query, criteriaBuilder) ->
-                    criteriaBuilder.lessThanOrEqualTo(root.get("availability"), maxAvailability));
-        }
-        Page<Accommodation> accommodations = accommodationRepository.findAll(specification, pageable);
-        return accommodations.map(accommodation -> new AccommodationDto(accommodation.getId(), accommodation.getCreated(), accommodation.getName(),
-                accommodation.getLocation(), accommodation.getType(), accommodation.getPricePerNight(), accommodation.getAvailability()
-        ));
     }
-
 
     public AccommodationDto updateAccommodation(Long id, AccommodationDto accommodationDto) {
-        Accommodation accommodation = accommodationRepository.findById(id)
-                .orElseThrow(() -> new AccommodationNotFound("Accommodation not found"));
-        accommodationMapper.partialUpdate(accommodationDto, accommodation);
-        return accommodationMapper.toDto(accommodationRepository.save(accommodation));
+        logger.info("Updating accommodation with ID: {}", id);
+        try {
+            Accommodation accommodation = accommodationRepository.findById(id)
+                    .orElseThrow(() -> new AccommodationNotFound("Accommodation not found"));
+            accommodationMapper.partialUpdate(accommodationDto, accommodation);
+            Accommodation updatedAccommodation = accommodationRepository.save(accommodation);
+            logger.info("Accommodation with ID: {} updated successfully", id);
+            return accommodationMapper.toDto(updatedAccommodation);
+        } catch (AccommodationNotFound e) {
+            logger.warn("Accommodation with ID: {} not found", id, e);
+            throw e;
+        } catch (Exception e) {
+            logger.error("Error while updating accommodation with ID: {}", id, e);
+            throw e;
+        }
     }
+
 
 }
