@@ -9,7 +9,6 @@ import com.example.course_work.mapper.GuideMapper;
 import com.example.course_work.repository.GuideRepository;
 import com.example.course_work.repository.TourRepository;
 import lombok.AllArgsConstructor;
-import org.springframework.cache.annotation.Cacheable;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
@@ -69,19 +68,19 @@ public class GuideService {
     }
 
     @Transactional(readOnly = true)
-    public List<GuideSortDto> getAllGuides() {
-        logger.info("Fetching all guides");
+    public Page<GuideSortDto> getAllGuides(Pageable pageable) {
+        logger.info("Fetching guides with pagination and sorting");
         try {
-            List<GuideSortDto> guides = guideRepository.findAll().stream()
-                    .map(guideMapper::toGdSortDto)
-                    .toList();
-            logger.info("Fetched {} guides", guides.size());
+            Page<GuideSortDto> guides = guideRepository.findAll(pageable)
+                    .map(guideMapper::toGdSortDto);
+            logger.info("Fetched {} guides on page {}", guides.getNumberOfElements(), pageable.getPageNumber());
             return guides;
         } catch (Exception e) {
-            logger.error("Error while fetching all guides", e);
+            logger.error("Error while fetching paginated and sorted guides", e);
             throw e;
         }
     }
+
 
     @Transactional(readOnly = true)
     public Page<GuideDto> getSortedGuides(String sortBy, String order, Pageable pageable) {

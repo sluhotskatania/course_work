@@ -8,7 +8,6 @@ import com.example.course_work.exception.AccommodationNotFound;
 import com.example.course_work.mapper.AccommodationMapper;
 import com.example.course_work.repository.AccommodationRepository;
 import lombok.AllArgsConstructor;
-import org.springframework.cache.annotation.Cacheable;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
@@ -57,19 +56,19 @@ public class AccommodationService {
     }
 
     @Transactional(readOnly = true)
-    public List<AccommodationDto> getAllAccommodations() {
-        logger.info("Fetching all accommodations");
+    public Page<AccommodationDto> getAllAccommodations(Pageable pageable) {
+        logger.info("Fetching accommodations with pagination and sorting");
         try {
-            List<AccommodationDto> accommodations = accommodationRepository.findAll().stream()
-                    .map(accommodationMapper::toDto)
-                    .toList();
-            logger.info("Successfully fetched {} accommodations", accommodations.size());
+            Page<AccommodationDto> accommodations = accommodationRepository.findAll(pageable)
+                    .map(accommodationMapper::toDto);
+            logger.info("Successfully fetched {} accommodations on page {}", accommodations.getNumberOfElements(), pageable.getPageNumber());
             return accommodations;
         } catch (Exception e) {
-            logger.error("Error while fetching all accommodations", e);
+            logger.error("Error while fetching paginated accommodations", e);
             throw e;
         }
     }
+
 
     @Transactional(readOnly = true)
     public Page<AccommodationDto> getSortedAccommodations(String sortBy, String order, Pageable pageable) {

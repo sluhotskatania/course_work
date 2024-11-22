@@ -9,7 +9,6 @@ import com.example.course_work.mapper.ClientMapper;
 import com.example.course_work.repository.BookingRepository;
 import com.example.course_work.repository.ClientRepository;
 import lombok.AllArgsConstructor;
-import org.springframework.cache.annotation.Cacheable;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
@@ -61,19 +60,19 @@ public class ClientService {
         }
     }
     @Transactional(readOnly = true)
-    public List<ClientDto> getAllClients() {
-        logger.info("Fetching all clients");
+    public Page<ClientDto> getAllClients(Pageable pageable) {
+        logger.info("Fetching clients with pagination");
         try {
-            List<ClientDto> clients = clientRepository.findAll().stream()
-                    .map(clientMapper::toDto)
-                    .toList();
-            logger.info("Successfully fetched {} clients", clients.size());
+            Page<ClientDto> clients = clientRepository.findAll(pageable)
+                    .map(clientMapper::toDto);
+            logger.info("Successfully fetched {} clients on page {}", clients.getNumberOfElements(), pageable.getPageNumber());
             return clients;
         } catch (Exception e) {
-            logger.error("Error while fetching all clients", e);
+            logger.error("Error while fetching paginated clients", e);
             throw e;
         }
     }
+
 
     @Transactional(readOnly = true)
     public Page<ClientDto> getSortedClients(String sortBy, String order, Pageable pageable) {

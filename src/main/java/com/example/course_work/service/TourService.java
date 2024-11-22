@@ -12,7 +12,6 @@ import com.example.course_work.repository.AccommodationRepository;
 import com.example.course_work.repository.BookingRepository;
 import com.example.course_work.repository.TourRepository;
 import lombok.AllArgsConstructor;
-import org.springframework.cache.annotation.Cacheable;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
@@ -84,19 +83,19 @@ public class TourService {
     }
 
     @Transactional(readOnly = true)
-    public List<TourDto> getAllTours() {
-        logger.info("Fetching all tours");
+    public Page<TourDto> getAllTours(Pageable pageable) {
+        logger.info("Fetching tours with pagination and sorting");
         try {
-            List<TourDto> tours = tourRepository.findAll().stream()
-                    .map(tourMapper::toDto)
-                    .toList();
-            logger.info("Successfully fetched {} tours", tours.size());
+            Page<TourDto> tours = tourRepository.findAll(pageable)
+                    .map(tourMapper::toDto);
+            logger.info("Successfully fetched {} tours on page {}", tours.getNumberOfElements(), pageable.getPageNumber());
             return tours;
         } catch (Exception e) {
-            logger.error("Error while fetching all tours", e);
+            logger.error("Error while fetching paginated tours", e);
             throw e;
         }
     }
+
 
     @Transactional(readOnly = true)
     public Page<TourDto> getSortedTours(String sortBy, String order, Pageable pageable) {

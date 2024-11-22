@@ -13,7 +13,6 @@ import com.example.course_work.repository.AccommodationRepository;
 import com.example.course_work.repository.BookingRepository;
 import com.example.course_work.repository.ClientRepository;
 import lombok.AllArgsConstructor;
-import org.springframework.cache.annotation.Cacheable;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
@@ -80,16 +79,15 @@ public class BookingServise {
     }
 
     @Transactional(readOnly = true)
-    public List<BookingDto> getAllBookings() {
-        logger.info("Fetching all bookings");
+    public Page<BookingDto> getAllBookings(Pageable pageable) {
+        logger.info("Fetching bookings with pagination");
         try {
-            List<BookingDto> bookings = bookingRepository.findAll().stream()
-                    .map(bookingMapper::toDto)
-                    .toList();
-            logger.info("Successfully fetched {} bookings", bookings.size());
+            Page<BookingDto> bookings = bookingRepository.findAll(pageable)
+                    .map(bookingMapper::toDto);
+            logger.info("Successfully fetched {} bookings on page {}", bookings.getNumberOfElements(), pageable.getPageNumber());
             return bookings;
         } catch (Exception e) {
-            logger.error("Error while fetching all bookings", e);
+            logger.error("Error while fetching paginated bookings", e);
             throw e;
         }
     }
