@@ -4,8 +4,12 @@ import com.example.course_work.dto.AccommodationCreationDto;
 import com.example.course_work.dto.AccommodationDto;
 import com.example.course_work.dto.BookingDto;
 import com.example.course_work.enums.TypeAccommodationEnum;
+import com.example.course_work.exception.AccommodationNotFound;
+import com.example.course_work.exception.BookingNotFound;
+import com.example.course_work.exception.TourNotFound;
 import com.example.course_work.service.AccommodationService;
 import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
@@ -17,6 +21,7 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
+import org.springframework.data.web.PageableDefault;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -74,12 +79,7 @@ public class AccommodationController {
     @GetMapping
     @Cacheable(value = "accommodations")
     public ResponseEntity<Page<AccommodationDto>> getAccommodations(
-            @RequestParam int page,
-            @RequestParam int size,
-            @RequestParam String[] sort) {
-
-        Sort.Direction direction = Sort.Direction.fromString(sort[1]);
-        Pageable pageable = PageRequest.of(page, size, Sort.by(direction, sort[0]));
+            @PageableDefault Pageable pageable) {
         Page<AccommodationDto> accommodations = accommodationService.getAllAccommodations(pageable);
         return ResponseEntity.ok(accommodations);
     }
@@ -145,6 +145,17 @@ public class AccommodationController {
     public ResponseEntity<AccommodationDto> updateAccommodation(@PathVariable Long id, @RequestBody @Valid AccommodationDto accommodationDto) {
         AccommodationDto updateAccommodation = accommodationService.updateAccommodation(id, accommodationDto);
         return ResponseEntity.ok(updateAccommodation);
+    }
+    @DeleteMapping("/{id}")
+    public ResponseEntity<String> deleteAccommodation(@Parameter(description = "ID of the accommodation to be deleted") @PathVariable Long id) {
+        try {
+            accommodationService.deleteAccommodation(id);
+            return ResponseEntity.ok("Accommodation with ID " + id + " marked as deleted successfully.");
+        } catch (AccommodationNotFound e) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(e.getMessage());
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("An unexpected error occurred.");
+        }
     }
 }
 

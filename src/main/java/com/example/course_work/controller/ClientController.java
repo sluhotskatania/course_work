@@ -1,9 +1,13 @@
 package com.example.course_work.controller;
 
 import com.example.course_work.dto.*;
+import com.example.course_work.exception.ClientNotFound;
+import com.example.course_work.exception.GuideNotFound;
+import com.example.course_work.exception.TourNotFound;
 import com.example.course_work.service.ClientService;
 import com.example.course_work.service.TourService;
 import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
@@ -15,6 +19,7 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
+import org.springframework.data.web.PageableDefault;
 import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -74,9 +79,7 @@ public class ClientController {
     @GetMapping
     @Cacheable(value = "clients")
     public ResponseEntity<Page<ClientDto>> getClients(
-            @RequestParam int page,
-            @RequestParam int size) {
-        Pageable pageable = PageRequest.of(page, size);
+            @PageableDefault Pageable pageable) {
         Page<ClientDto> clients = clientService.getAllClients(pageable);
         return ResponseEntity.ok(clients);
     }
@@ -140,5 +143,16 @@ public class ClientController {
     public ResponseEntity<ClientDto> updateClient(@PathVariable Long id, @RequestBody @Valid ClientDto clientDto) {
         ClientDto updateClient = clientService.updateClient(id, clientDto);
         return ResponseEntity.ok(updateClient);
+    }
+    @DeleteMapping("/{id}")
+    public ResponseEntity<String> deleteClient(@Parameter(description = "ID of the Tour to be deleted") @PathVariable Long id) {
+        try {
+            clientService.deleteClient(id);
+            return ResponseEntity.ok("Tour with ID " + id + " marked as deleted successfully.");
+        } catch (ClientNotFound e) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(e.getMessage());
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("An unexpected error occurred.");
+        }
     }
 }

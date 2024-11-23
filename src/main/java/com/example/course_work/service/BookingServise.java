@@ -8,6 +8,8 @@ import com.example.course_work.entity.Client;
 import com.example.course_work.enums.BookingStatusEnum;
 import com.example.course_work.enums.PaymentStatusEnum;
 import com.example.course_work.exception.BookingNotFound;
+import com.example.course_work.exception.ClientNotFound;
+import com.example.course_work.exception.TourNotFound;
 import com.example.course_work.mapper.BookingMapper;
 import com.example.course_work.repository.AccommodationRepository;
 import com.example.course_work.repository.BookingRepository;
@@ -106,9 +108,9 @@ public class BookingServise {
             return bookings.map(booking -> new BookingDto(
                     booking.getId(), booking.getCreated(), booking.getBookingDate(), booking.getStatus(),
                     booking.getPaymentStatus(), booking.getTotalPrice(), booking.getNotes(),
-                    booking.getAccommodation().getId(), booking.getAccommodation().getName(),
+                   booking.getAccommodation().getName(),
                     booking.getAccommodation().getLocation(),
-                    booking.getClient().getId(), booking.getClient().getName(),
+                    booking.getClient().getName(),
                     booking.getClient().getSurname(), booking.getClient().getEmail(),
                     booking.getClient().getPhone(), booking.getNights()
             ));
@@ -163,9 +165,9 @@ public class BookingServise {
             return bookings.map(booking -> new BookingDto(
                     booking.getId(), booking.getCreated(), booking.getBookingDate(), booking.getStatus(),
                     booking.getPaymentStatus(), booking.getTotalPrice(), booking.getNotes(),
-                    booking.getAccommodation().getId(), booking.getAccommodation().getName(),
+                  booking.getAccommodation().getName(),
                     booking.getAccommodation().getLocation(),
-                    booking.getClient().getId(), booking.getClient().getName(),
+                     booking.getClient().getName(),
                     booking.getClient().getSurname(), booking.getClient().getEmail(),
                     booking.getClient().getPhone(), booking.getNights()
             ));
@@ -195,6 +197,21 @@ public class BookingServise {
             throw e;
         }
     }
-
+    @Transactional
+    public void deleteBooking(Long id) {
+        logger.info("Attempting to mark Booking with ID: {} as deleted", id);
+        try {
+            Booking booking = bookingRepository.findById(id).orElseThrow(() -> {
+                logger.warn("Booking with ID: {} not found", id);
+                return new BookingNotFound("Booking with ID " + id + " not found.");
+            });
+            booking.setDeleted(true);
+            bookingRepository.save(booking);
+            logger.info("Booking with ID: {} marked as deleted successfully", id);
+        } catch (Exception e) {
+            logger.error("Error occurred while marking Booking with ID: {} as deleted", id, e);
+            throw e;
+        }
+    }
 
 }

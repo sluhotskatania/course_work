@@ -2,8 +2,11 @@ package com.example.course_work.controller;
 
 import com.example.course_work.dto.*;
 import com.example.course_work.enums.LanguagesEnum;
+import com.example.course_work.exception.GuideNotFound;
+import com.example.course_work.exception.TourNotFound;
 import com.example.course_work.service.GuideService;
 import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
@@ -15,6 +18,7 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
+import org.springframework.data.web.PageableDefault;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -62,19 +66,14 @@ public class GuideController {
             description = "Fetches a paginated list of all guides with optional sorting",
             responses = {
                     @ApiResponse(responseCode = "200", description = "Successfully fetched guides",
-                            content = @Content(mediaType = "application/json", schema = @Schema(implementation = GuideSortDto.class)))
+                            content = @Content(mediaType = "application/json", schema = @Schema(implementation = GuideDto.class)))
             }
     )
     @GetMapping
     @Cacheable(value = "guides")
-    public ResponseEntity<Page<GuideSortDto>> getGuides(
-            @RequestParam int page,
-            @RequestParam int size,
-            @RequestParam String[] sort) {
-
-        Sort.Direction direction = Sort.Direction.fromString(sort[1]);
-        Pageable pageable = PageRequest.of(page, size, Sort.by(direction, sort[0]));
-        Page<GuideSortDto> guides = guideService.getAllGuides(pageable);
+    public ResponseEntity<Page<GuideDto>> getGuides(
+            @PageableDefault Pageable pageable){
+        Page<GuideDto> guides = guideService.getAllGuides(pageable);
         return ResponseEntity.ok(guides);
     }
 
@@ -135,6 +134,17 @@ public class GuideController {
     public ResponseEntity<GuideDto> updateGuide(@PathVariable Long id, @RequestBody @Valid GuideDto guideDto) {
         GuideDto updateGuide = guideService.updateGuide(id, guideDto);
         return ResponseEntity.ok(updateGuide);
+    }
+    @DeleteMapping("/{id}")
+    public ResponseEntity<String> deleteGuide(@Parameter(description = "ID of the Tour to be deleted") @PathVariable Long id) {
+        try {
+            guideService.deleteGuide(id);
+            return ResponseEntity.ok("Tour with ID " + id + " marked as deleted successfully.");
+        } catch (GuideNotFound e) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(e.getMessage());
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("An unexpected error occurred.");
+        }
     }
 }
 

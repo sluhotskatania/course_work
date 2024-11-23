@@ -5,6 +5,7 @@ import com.example.course_work.entity.Guide;
 import com.example.course_work.entity.Tour;
 import com.example.course_work.enums.LanguagesEnum;
 import com.example.course_work.exception.GuideNotFound;
+import com.example.course_work.exception.TourNotFound;
 import com.example.course_work.mapper.GuideMapper;
 import com.example.course_work.repository.GuideRepository;
 import com.example.course_work.repository.TourRepository;
@@ -68,11 +69,11 @@ public class GuideService {
     }
 
     @Transactional(readOnly = true)
-    public Page<GuideSortDto> getAllGuides(Pageable pageable) {
+    public Page<GuideDto> getAllGuides(Pageable pageable) {
         logger.info("Fetching guides with pagination and sorting");
         try {
-            Page<GuideSortDto> guides = guideRepository.findAll(pageable)
-                    .map(guideMapper::toGdSortDto);
+            Page<GuideDto> guides = guideRepository.findAll(pageable)
+                    .map(guideMapper::toDto);
             logger.info("Fetched {} guides on page {}", guides.getNumberOfElements(), pageable.getPageNumber());
             return guides;
         } catch (Exception e) {
@@ -80,8 +81,6 @@ public class GuideService {
             throw e;
         }
     }
-
-
     @Transactional(readOnly = true)
     public Page<GuideDto> getSortedGuides(String sortBy, String order, Pageable pageable) {
         logger.info("Fetching sorted guides by {} in {} order", sortBy, order);
@@ -172,5 +171,23 @@ public class GuideService {
             throw e;
         }
     }
+
+    @Transactional
+    public void deleteGuide(Long id) {
+        logger.info("Attempting to mark Guide with ID: {} as deleted", id);
+        try {
+            Guide guide = guideRepository.findById(id).orElseThrow(() -> {
+                logger.warn("Guide with ID: {} not found", id);
+                return new GuideNotFound("Guide with ID " + id + " not found.");
+            });
+            guide.setDeleted(true);
+            guideRepository.save(guide);
+            logger.info("Guide with ID: {} marked as deleted successfully", id);
+        } catch (Exception e) {
+            logger.error("Error occurred while marking Guide with ID: {} as deleted", id, e);
+            throw e;
+        }
+    }
+
 
 }

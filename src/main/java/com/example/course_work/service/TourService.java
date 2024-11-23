@@ -107,12 +107,11 @@ public class TourService {
 
             logger.info("Successfully fetched sorted tours");
             return tours.map(tour -> new TourDto(
-                    tour.getId(), tour.getCreated(), tour.getName(), tour.getDestination(),
+                    tour.getId(),  tour.getName(), tour.getDestination(),
                     tour.getDuration(), tour.getPrice(), tour.getDepartureDate(),
                     tour.getReturnDate(), tour.getType(), tour.getMaxParticipants(),
-                    tour.getAccommodation().getId(), tour.getAccommodation().getName(),
+                    tour.getAccommodation().getName(),
                     tour.getAccommodation().getLocation(), tour.getAccommodation().getType(),
-                    tour.getAccommodation().getPricePerNight(), tour.getBooking().getId(),
                     tour.getBooking().getTotalPrice(), tour.getBooking().getNotes()
             ));
         } catch (Exception e) {
@@ -171,12 +170,11 @@ public class TourService {
 
             logger.info("Successfully fetched {} filtered tours", tours.getTotalElements());
             return tours.map(tour -> new TourDto(
-                    tour.getId(), tour.getCreated(), tour.getName(), tour.getDestination(), tour.getDuration(),
+                    tour.getId(),  tour.getName(), tour.getDestination(), tour.getDuration(),
                     tour.getPrice(), tour.getDepartureDate(), tour.getReturnDate(), tour.getType(),
-                    tour.getMaxParticipants(), tour.getAccommodation().getId(),
+                    tour.getMaxParticipants(),
                     tour.getAccommodation().getName(), tour.getAccommodation().getLocation(),
-                    tour.getAccommodation().getType(), tour.getAccommodation().getPricePerNight(),
-                    tour.getBooking().getId(), tour.getBooking().getTotalPrice(), tour.getBooking().getNotes()
+                    tour.getAccommodation().getType(), tour.getBooking().getTotalPrice(), tour.getBooking().getNotes()
             ));
         } catch (Exception e) {
             logger.error("Error fetching filtered tours", e);
@@ -198,6 +196,22 @@ public class TourService {
             throw e;
         } catch (Exception e) {
             logger.error("Error updating tour with ID: {}", id, e);
+            throw e;
+        }
+    }
+    @Transactional
+    public void deleteTour(Long id) {
+        logger.info("Attempting to mark Tour with ID: {} as deleted", id);
+        try {
+            Tour tour = tourRepository.findById(id).orElseThrow(() -> {
+                logger.warn("Tour with ID: {} not found", id);
+                return new TourNotFound("Tour with ID " + id + " not found.");
+            });
+            tour.setDeleted(true);
+            tourRepository.save(tour);
+            logger.info("Tour with ID: {} marked as deleted successfully", id);
+        } catch (Exception e) {
+            logger.error("Error occurred while marking Tour with ID: {} as deleted", id, e);
             throw e;
         }
     }

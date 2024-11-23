@@ -3,7 +3,10 @@ package com.example.course_work.service;
 import com.example.course_work.dto.ClientCreationDto;
 import com.example.course_work.dto.ClientDto;
 import com.example.course_work.entity.Client;
+import com.example.course_work.entity.Guide;
 import com.example.course_work.exception.ClientNotFound;
+import com.example.course_work.exception.GuideNotFound;
+import com.example.course_work.exception.TourNotFound;
 import com.example.course_work.mapper.BookingMapper;
 import com.example.course_work.mapper.ClientMapper;
 import com.example.course_work.repository.BookingRepository;
@@ -72,8 +75,6 @@ public class ClientService {
             throw e;
         }
     }
-
-
     @Transactional(readOnly = true)
     public Page<ClientDto> getSortedClients(String sortBy, String order, Pageable pageable) {
         logger.info("Fetching sorted clients with sortBy: {}, order: {}, page: {}", sortBy, order, pageable);
@@ -162,6 +163,21 @@ public class ClientService {
             throw e;
         }
     }
-
+    @Transactional
+    public void deleteClient(Long id) {
+        logger.info("Attempting to mark Client with ID: {} as deleted", id);
+        try {
+            Client client = clientRepository.findById(id).orElseThrow(() -> {
+                logger.warn("Client with ID: {} not found", id);
+                return new ClientNotFound("Client with ID " + id + " not found.");
+            });
+            client.setDeleted(true);
+            clientRepository.save(client);
+            logger.info("Client with ID: {} marked as deleted successfully", id);
+        } catch (Exception e) {
+            logger.error("Error occurred while marking Client with ID: {} as deleted", id, e);
+            throw e;
+        }
+    }
 
 }

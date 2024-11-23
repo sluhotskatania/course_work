@@ -12,7 +12,7 @@ import java.util.Date;
  */
 public record BookingDto(Long id, Date created, Date bookingDate,
                          BookingStatusEnum status, PaymentStatusEnum paymentStatus, Double totalPrice, String notes,
-                         Long accommodationId, String accommodationName, String accommodationLocation,
-                         Long clientId, String clientName, String clientSurname,
+                         String accommodationName, String accommodationLocation,
+                          String clientName, String clientSurname,
                          String clientEmail, String clientPhone, int nights) implements Serializable {
   }

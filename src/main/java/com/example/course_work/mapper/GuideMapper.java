@@ -2,7 +2,6 @@ package com.example.course_work.mapper;
 
 import com.example.course_work.dto.GuideCreationDto;
 import com.example.course_work.dto.GuideDto;
-import com.example.course_work.dto.GuideSortDto;
 import com.example.course_work.entity.Guide;
 import org.mapstruct.*;
 
@@ -30,5 +29,4 @@ public interface GuideMapper {
     Guide partialUpdate(GuideDto guideDto, @MappingTarget Guide guide);
 
     Guide toEntity(GuideCreationDto guideCreationDto);
-    GuideSortDto toGdSortDto(Guide guide);
 }

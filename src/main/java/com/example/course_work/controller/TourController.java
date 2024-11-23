@@ -1,12 +1,12 @@
 package com.example.course_work.controller;
 
-import com.example.course_work.dto.GuideDto;
 import com.example.course_work.dto.TourCreationDto;
 import com.example.course_work.dto.TourDto;
-import com.example.course_work.dto.TourSortDto;
 import com.example.course_work.enums.TypeEnum;
+import com.example.course_work.exception.TourNotFound;
 import com.example.course_work.service.TourService;
 import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
@@ -15,16 +15,14 @@ import lombok.AllArgsConstructor;
 import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.cache.annotation.Cacheable;
 import org.springframework.data.domain.Page;
-import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
-import org.springframework.data.domain.Sort;
+import org.springframework.data.web.PageableDefault;
 import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.Date;
-import java.util.List;
 
 @RestController
 @AllArgsConstructor
@@ -74,11 +72,7 @@ public class TourController {
     @GetMapping
     @Cacheable(value = "tours")
     public ResponseEntity<Page<TourDto>> getTours(
-            @RequestParam int page,
-            @RequestParam int size,
-            @RequestParam String[] sort) {
-        Sort.Direction direction = Sort.Direction.fromString(sort[1]);
-        Pageable pageable = PageRequest.of(page, size, Sort.by(direction, sort[0]));
+            @PageableDefault Pageable pageable) {
         Page<TourDto> tours = tourService.getAllTours(pageable);
         return ResponseEntity.ok(tours);
     }
@@ -144,5 +138,26 @@ public class TourController {
         TourDto updateTour = tourService.updateTour(id, tourDto);
         return ResponseEntity.ok(updateTour);
     }
+    @Operation(
+            summary = "Soft delete a tour by ID",
+            description = "Marks a tour as deleted without removing it from the database",
+            responses = {
+                    @ApiResponse(responseCode = "200", description = "Tour successfully marked as deleted"),
+                    @ApiResponse(responseCode = "404", description = "Tour not found"),
+                    @ApiResponse(responseCode = "400", description = "Invalid ID format")
+            }
+    )
+    @DeleteMapping("/{id}")
+    public ResponseEntity<String> deleteTour(@Parameter(description = "ID of the Tour to be deleted") @PathVariable Long id) {
+        try {
+            tourService.deleteTour(id);
+            return ResponseEntity.ok("Tour with ID " + id + " marked as deleted successfully.");
+        } catch (TourNotFound e) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(e.getMessage());
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("An unexpected error occurred.");
+        }
+    }
+
 }
 

@@ -14,4 +14,7 @@ public abstract class BaseEntity {
 
     @Temporal(TemporalType.TIMESTAMP)
     private Date created = new Date();
+
+    @Column(name = "is_deleted", nullable = false, columnDefinition = "boolean default false")
+    private boolean isDeleted = false;
 }

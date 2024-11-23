@@ -3,8 +3,10 @@ package com.example.course_work.service;
 import com.example.course_work.dto.AccommodationCreationDto;
 import com.example.course_work.dto.AccommodationDto;
 import com.example.course_work.entity.Accommodation;
+import com.example.course_work.entity.Booking;
 import com.example.course_work.enums.TypeAccommodationEnum;
 import com.example.course_work.exception.AccommodationNotFound;
+import com.example.course_work.exception.BookingNotFound;
 import com.example.course_work.mapper.AccommodationMapper;
 import com.example.course_work.repository.AccommodationRepository;
 import lombok.AllArgsConstructor;
@@ -149,6 +151,21 @@ public class AccommodationService {
             throw e;
         }
     }
-
+    @Transactional
+    public void deleteAccommodation(Long id) {
+        logger.info("Attempting to mark Accommodation with ID: {} as deleted", id);
+        try {
+            Accommodation accommodation = accommodationRepository.findById(id).orElseThrow(() -> {
+                logger.warn("Accommodation with ID: {} not found", id);
+                return new AccommodationNotFound("Accommodation with ID " + id + " not found.");
+            });
+            accommodation.setDeleted(true);
+            accommodationRepository.save(accommodation);
+            logger.info("Accommodation with ID: {} marked as deleted successfully", id);
+        } catch (Exception e) {
+            logger.error("Error occurred while marking Accommodation with ID: {} as deleted", id, e);
+            throw e;
+        }
+    }
 
 }

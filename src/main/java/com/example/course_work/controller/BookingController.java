@@ -5,8 +5,12 @@ import com.example.course_work.dto.BookingDto;
 import com.example.course_work.entity.Client;
 import com.example.course_work.enums.BookingStatusEnum;
 import com.example.course_work.enums.PaymentStatusEnum;
+import com.example.course_work.exception.BookingNotFound;
+import com.example.course_work.exception.ClientNotFound;
+import com.example.course_work.exception.TourNotFound;
 import com.example.course_work.service.BookingServise;
 import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
@@ -18,12 +22,12 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
+import org.springframework.data.web.PageableDefault;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.Date;
-import java.util.List;
 
 @RestController
 @AllArgsConstructor
@@ -72,12 +76,7 @@ public class BookingController {
     @GetMapping
     @Cacheable(value = "bookings")
     public ResponseEntity<Page<BookingDto>> getBookings(
-            @RequestParam int page,
-            @RequestParam int size,
-            @RequestParam String[] sort) {
-
-        Sort.Direction direction = Sort.Direction.fromString(sort[1]);
-        Pageable pageable = PageRequest.of(page, size, Sort.by(direction, sort[0]));
+            @PageableDefault Pageable pageable) {
         Page<BookingDto> bookings = bookingServise.getAllBookings(pageable);
         return ResponseEntity.ok(bookings);
     }
@@ -134,5 +133,16 @@ public class BookingController {
     public ResponseEntity<BookingDto> updateBooking(@PathVariable Long id, @RequestBody @Valid BookingDto bookingDto) {
         BookingDto updatedBooking = bookingServise.updateBooking(id, bookingDto);
         return ResponseEntity.ok(updatedBooking);
+    }
+    @DeleteMapping("/{id}")
+    public ResponseEntity<String> deleteBooking(@Parameter(description = "ID of the Tour to be deleted") @PathVariable Long id) {
+        try {
+            bookingServise.deleteBooking(id);
+            return ResponseEntity.ok("Tour with ID " + id + " marked as deleted successfully.");
+        } catch (BookingNotFound e) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(e.getMessage());
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("An unexpected error occurred.");
+        }
     }
 }
